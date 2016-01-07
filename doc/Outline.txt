@@ -1,0 +1,101 @@
+Interface
+
+void main(int argc, char **argv)
+{
+    map<string, Element> variables; // global variables
+    Parser parser;
+    Calculator calculator;
+    vector<Element> output;
+    int flag;
+
+    while(1)
+    {
+        output.clear();
+        input = get_raw_input()
+        vector<string> lines = vectorize(input)
+        flag = parser.parse(lines, variables, output);
+
+        if(flag == -1)
+            output.clear();
+            output.push_back(...);
+            cout << output
+            continue;
+        else
+            cout << process(output);
+    }
+}
+
+Parser
+
+var a = ...;
+
+if(boolean # undefined false null 0 -> false)
+{
+    ...;
+}
+else
+{
+    if()
+    {
+        ...;
+    }
+    else
+    {
+        ...;
+    }
+}
+
+for(var a: list)
+{
+    ...;
+}
+
+switch(expression)
+{
+    case # number string:
+        ...;
+        break;
+    default:
+        break;
+}
+
+while(... # boolean )
+{
+    ...;
+}
+
+break;
+continue;
+return;
+
+local variables
+
+others -> exp;
+
+nesting-supportive;
+
+a[(10 + 1)];
+
+function f(a, b)
+{
+    ...
+}
+
+
+Expression
+
+1 + 2 + 3.5
+
+a + 2 + 4.5 + 7
+
+2 + 3 + f((1 + 3))
+
+a[10] + 2 + 4
+
+"abv" + "def"
+
+[1.0, "string", true]
+
+(a + b) == / >= / <= / < / > (c + d)
+(a + b) && / || / ~ (c + d)
+
