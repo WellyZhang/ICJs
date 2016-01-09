@@ -9,12 +9,15 @@
 class Calculator
 {
 	public:
-		Calculator();
 		static int calculate(std::string &exp, 
 			std::map<std::string, Element> &variables, 
-			Element &ret,
+			std::vector<Element> &rets,
 			std::vector<Element> &output);
-		~Calculator();
+		static int isOperator(std::string input);
+		static int isFunction(std::string input, std::map<std::string, Element> &variables);
+		static int isVar(std::string input, std::map<std::string, Element> &variables);
+		static int RPNCalc(std::string input, std::map<std::string, Element> &variables, Element &ret);
+		static int priority(std::string opt);
 };
 
 #endif ICJS_COMPUTE_H

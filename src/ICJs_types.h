@@ -38,6 +38,7 @@ class Element
 		std::string key;
 		int type;
 		any_t data;
+		Element(){ key = ""; type = Global::_undefined; data = NULL; };
 };
 
 class Function

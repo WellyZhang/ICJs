@@ -7,7 +7,10 @@
 #include <map> 
 #include <vector>
 #include <iostream>
-
+#include "ICJs_compute.h"
+#include "ICJs_types.h"
+#include "ICJs_util.h"
+#include <sstream>
 
 #define FORGREEN (FOREGROUND_GREEN | FOREGROUND_INTENSITY)
 #define FORBLACK (FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED)
@@ -19,8 +22,6 @@ void printHeader(void);
 void printCredits(void);
 string readIn(int i);
 string writeOut(string in);
-string &trim(string &in);
-void split(string& s, string delim, vector<string> *ret);
 
 HANDLE outputHandler = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -31,7 +32,28 @@ int main(int argc, char **argv)
 	string input = "In ", output = "Out";
 	string rawInput = "";
 	string result = "nil";
+	map<string, Element> variables;
+	Element ret;
+	vector<Element> rets;
+	vector<Element> output_;
+	vector<string> statements;
 
+	Element a;
+	a.key = "A";
+	a.type = Global::_number;
+	a.data = any_t(new double(5));
+	variables[a.key] = a;
+
+	string s = "A * ((3.2 - 1) + 2) * 2 + 4 * (2 + 1)";
+	int b = Calculator::calculate(s, variables, rets, output_);
+	for (int i = 0; i < rets.size(); i++)
+	{
+		cout << *(double *)rets[i].data << endl;
+	}
+
+	system("pause");
+
+	/*
 	int i = 0;
 	while (true)
 	{
@@ -44,6 +66,16 @@ int main(int argc, char **argv)
 		{
 			break;
 		}
+		Util::split(rawInput, "\n", &statements);
+		//Calculator::calculate(rawInput, variables, ret, output_);
+		
+		
+		for (int i = 0; i < statements.size(); i++)
+		{
+			cout << statements[i] << endl;
+		}
+		
+		
 		result = writeOut(trim(rawInput));
 		if (result != "")
 		{
@@ -61,6 +93,7 @@ int main(int argc, char **argv)
 		}
 		cout << endl;
 	}
+	*/
 	return 0;
 }
 
@@ -130,36 +163,8 @@ string writeOut(string in)
 {
 	vector<string> stmts;
 	string out;
-	split(in, "\n", &stmts);
+	Util::split(in, "\n", &stmts);
 	out = in;
 	return out;
-}
-
-string &trim(string &s)
-{
-	if (s.empty())
-	{
-		return s;
-	}
-
-	s.erase(0, s.find_first_not_of(" "));
-	s.erase(s.find_last_not_of(" ") + 1);
-	return s;
-}
-
-void split(string& s, string delim, vector<string> *ret)
-{
-	size_t last = 0;
-	size_t index = s.find_first_of(delim, last);
-	while (index != string::npos)
-	{
-		ret->push_back(trim(s.substr(last, index - last)));
-		last = index + 1;
-		index = s.find_first_of(delim, last);
-	}
-	if (index - last > 0)
-	{
-		ret->push_back(trim(s.substr(last, index - last)));
-	}
 }
 
