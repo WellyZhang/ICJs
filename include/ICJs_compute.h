@@ -10,7 +10,6 @@
 class Calculator
 {
 	public:
-		static Parser p;
 		static int calculate(std::string &exp, 
 			std::map<std::string, Element> &variables, 
 			std::vector<Element> &rets,

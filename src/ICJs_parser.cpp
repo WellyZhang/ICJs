@@ -164,11 +164,12 @@ int _parse(vector<string> &input,
 	string var;
 	string list;
 	string switch_exp;
-	Element ret;
+	vector<Element> ret;
 	vector<Element> localVar;
 	vector<Element> cofflictVar;
 
 	while (it != input.end()){
+		ret.clear();
 		int end = it->find(';');
 		if (end == string::npos)
 			end = it->size() - 1;
@@ -193,15 +194,15 @@ int _parse(vector<string> &input,
 				if (error != Global::_ok){
 					return Global::_fault;
 				}
-				ret.key = key;
+				ret[0].key = key;
 				if (islocal){
 					if (variables.find(key) != variables.end()){
 						cofflictVar.push_back(variables[key]);
 						variables.erase(key);
 					}
-					localVar.push_back(ret);
+					localVar.push_back(ret[0]);
 				}
-				variables[key] = ret;
+				variables[key] = ret[0];
 				it++;
 			}
 			else{
@@ -235,10 +236,10 @@ int _parse(vector<string> &input,
 			int error = Calculator::calculate(cond, variables, ret, output);
 			if (error != Global::_ok)
 				return error;
-			if (ret.type != Global::_boolean)
+			if (ret[0].type != Global::_boolean)
 				return Global::_fault;
 
-			if (*((bool*)ret.data) == true){
+			if (*((bool*)ret[0].data) == true){
 				it++;
 			}
 			else {
@@ -322,9 +323,9 @@ int _parse(vector<string> &input,
 			int last = it->rfind(':');
 			exp = switch_exp + "==" + "(" + it->substr(first + 1, last - first - 1) + ")";
 			int error = Calculator::calculate(exp, variables, ret, output);
-			assert(ret.type == Global::_boolean);
+			assert(ret[0].type == Global::_boolean);
 
-			if (*((bool*)ret.data) == true){
+			if (*((bool*)ret[0].data) == true){
 				it++;
 			}
 			else {
@@ -358,7 +359,7 @@ int _parse(vector<string> &input,
 			int error = Calculator::calculate(cond, variables, ret, output);
 			if (error != Global::_ok)
 				return error;
-			if (ret.type != Global::_boolean)
+			if (ret[0].type != Global::_boolean)
 				return Global::_fault;
 
 			string oper;
@@ -366,7 +367,7 @@ int _parse(vector<string> &input,
 			is >> oper;
 			clear_string(oper);
 
-			if (*((bool*)ret.data) == true){
+			if (*((bool*)ret[0].data) == true){
 				if (oper == "{"){
 					int error = _parse(vector<string>(it + 2, vector_find_bracket(input, it + 1)),
 						variables,
@@ -403,37 +404,41 @@ int _parse(vector<string> &input,
 			int error = Calculator::calculate(exp, variables, ret, output);
 			if (error != Global::_ok)
 				return error;
-			fun_ret = ret;
+			fun_ret = ret[0];
 			break;
 		}
 		else if (oper == "function"){
-			int first = it->find('n');
+			int first = it->find('o');
 			int last = it->find('(');
 
 			assert(first != string::npos);
 			assert(last != string::npos);
 
-			exp = it->substr(first + 1, last - first - 1);
+			exp = it->substr(first + 2, last - first - 2);
 			string_dblank(exp);
 
-			Function function;
-			function.key = exp;
+			Function *function=new Function;
+			function->key = exp;
 
 			first = last;
 			last = it->rfind(')');
-			split(it->substr(first + 1, last - first - 1), ",", function.param_names);
-			for (vsit itt = function.param_names.begin(); itt != function.param_names.end(); itt++)
+			split(it->substr(first + 1, last - first - 1), ",", function->param_names);
+			for (vsit itt = function->param_names.begin(); itt != function->param_names.end(); itt++)
 				string_dblank(*itt);
 			
-			function.body = vector<string>(it + 2, vector_find_bracket(input, it + 1) - 2);
+			function->body = vector<string>(it + 2, vector_find_bracket(input, it + 1) - 1);
+
+			Element *element = new Element(function->key, Global::_function, &function);
+
+			variables[function->key] = *element;
 			it = vector_find_bracket(input, it + 1);
 		}
 		else {
-			exp = *it;
-			int error = Calculator::calculate(exp, variables, ret, output);
+			exp = it->substr(0, end);
+			int error = Calculator::numeric(exp, variables, ret, output);
 			if (error != Global::_ok)
 				return error;
-			output.push_back(ret);
+			output.push_back(ret[0]);
 			it++;
 		}
 	}

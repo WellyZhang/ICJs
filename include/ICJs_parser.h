@@ -15,10 +15,10 @@ class Parser
 {
 	public:
 		Parser();
-		int parse(std::vector<std::string> &input, 
+		static int parse(std::vector<std::string> &input, 
 			std::map<std::string, Element> &variables, 
 			std::vector<Element> &output);
-		int run_func(Function &func,
+		static int run_func(Function &func,
 			std::map<std::string, Element> &variables,
 			std::vector<Element> parameters,
 			Element &ret, 

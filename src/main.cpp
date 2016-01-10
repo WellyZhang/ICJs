@@ -10,6 +10,7 @@
 #include "ICJs_compute.h"
 #include "ICJs_types.h"
 #include "ICJs_util.h"
+#include "ICJs_parser.h"
 #include <sstream>
 
 #define FORGREEN (FOREGROUND_GREEN | FOREGROUND_INTENSITY)
@@ -38,7 +39,17 @@ int main(int argc, char **argv)
 	vector<Element> output_;
 	vector<string> statements;
 
-	Element a;
+	statements.push_back("var a=[2, 10, 2 + 3];");
+	statements.push_back("var sum = 0;");
+	statements.push_back("for (var i:a)");
+	statements.push_back("sum=sum+i;");
+	statements.push_back("sum");
+
+	Parser::parse(statements, variables, output_);
+
+	cout << *((double*)output_[0].data) << endl;
+
+	/*Element a;
 	a.key = "A";
 	a.type = Global::_number;
 	a.data = any_t(new double(5));
@@ -70,7 +81,7 @@ int main(int argc, char **argv)
 	{
 		cout << *(double *)(*(vector<Element> *)(rets[0].data))[i].data << endl;
 	}
-	system("pause");
+	system("pause");*/
 
 	/*
 	int i = 0;
