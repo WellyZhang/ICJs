@@ -7,6 +7,41 @@
 #include <ctype.h>
 #include <sstream>
 
+int Calculator::calculate(std::string &exp,
+	std::map<std::string, Element> &variables,
+	std::vector<Element> &rets,
+	std::vector<Element> &output)
+{
+	Util::trim(exp);
+	size_t leftBkt;
+	size_t rightBkt;
+	std::vector<Element> tempElements;
+	
+	leftBkt = exp.find_first_of("[");
+	rightBkt = exp.find_first_of("]");
+	if (leftBkt != std::string::npos)
+	{
+		std::string inArray;
+		std::vector<std::string> aryElements;
+		std::vector<Element> tempRets;
+
+		if (rightBkt == std::string::npos || rightBkt != exp.length() - 1 || rightBkt < leftBkt)
+			return Global::_fault;
+		inArray = exp.substr(leftBkt + 1, rightBkt - leftBkt - 1);
+		Util::split(inArray, ",", &aryElements);
+		for (int i = 0; i < aryElements.size(); i++)
+		{
+			numeric(aryElements[i], variables, tempRets, output);
+			tempRets.clear();
+		}
+
+	}
+	else if (rightBkt == std::string::npos)
+		return Global::_fault;
+	
+	return Global::_ok;
+}
+
 int Calculator::numeric(std::string &exp,
 	std::map<std::string, Element> &variables,
 	std::vector<Element> &rets,
@@ -15,6 +50,8 @@ int Calculator::numeric(std::string &exp,
 	size_t index;
 	size_t start;
 	int counter = 0;
+
+	Util::trim(exp);
 
 	while ((start = exp.find_first_of("(")) != std::string::npos)
 	{
