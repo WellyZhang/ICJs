@@ -63,13 +63,13 @@ int main(int argc, char **argv)
 	func.data = any_t(&foo);
 	variables[func.key] = func;
 
-	string s = "5";//"foo(3.5 + 2, foo(2, 3)) + A * B - 4.2";
-	int c = Calculator::numeric(s, variables, rets, output_);
-	for (int i = 0; i < rets.size(); i++)
-	{
-		cout << *(double *)rets[i].data << endl;
-	}
 
+	string s = "[2, 3 + 4, foo(2, 3)]";//"5";//"foo(3.5 + 2, foo(2, 3)) + A * B - 4.2";
+	int c = Calculator::calculate(s, variables, rets, output_);
+	for (int i = 0; i < (*(vector<Element> *)(rets[0].data)).size(); i++)
+	{
+		cout << *(double *)(*(vector<Element> *)(rets[0].data))[i].data << endl;
+	}
 	system("pause");
 
 	/*

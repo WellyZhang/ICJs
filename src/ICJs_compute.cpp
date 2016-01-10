@@ -15,8 +15,8 @@ int Calculator::calculate(std::string &exp,
 	Util::trim(exp);
 	size_t leftBkt;
 	size_t rightBkt;
-	std::vector<Element> tempElements;
-	
+	std::vector<Element> *elemArray = new std::vector<Element>;
+		
 	leftBkt = exp.find_first_of("[");
 	rightBkt = exp.find_first_of("]");
 	if (leftBkt != std::string::npos)
@@ -29,17 +29,57 @@ int Calculator::calculate(std::string &exp,
 			return Global::_fault;
 		inArray = exp.substr(leftBkt + 1, rightBkt - leftBkt - 1);
 		Util::split(inArray, ",", &aryElements);
+		std::vector<std::string> fusedElements;
+		bool isSep = false;
+		std::string toBeFused = "";
 		for (int i = 0; i < aryElements.size(); i++)
 		{
-			numeric(aryElements[i], variables, tempRets, output);
-			tempRets.clear();
+			if (aryElements[i].find_first_of("(") != std::string::npos && !isSep)
+			{
+				isSep = true;
+				toBeFused += aryElements[i];
+				toBeFused += ",";
+			}
+			else if (isSep && aryElements[i].find_first_of(")") != std::string::npos)
+			{
+				isSep = false;
+				toBeFused += aryElements[i];
+				fusedElements.push_back(toBeFused);
+				toBeFused = "";
+			}
+			else if (isSep)
+			{
+				toBeFused += aryElements[i];
+				toBeFused += ",";
+			}
+			else if (!isSep)
+			{
+				fusedElements.push_back(aryElements[i]);
+			}
+
 		}
 
+		for (int i = 0; i < fusedElements.size(); i++)
+		{
+			Element *elem = new Element;
+			numeric(fusedElements[i], variables, tempRets, output);
+			(*elem).type = tempRets[0].type;
+			(*elem).data = tempRets[0].data;
+			(*elemArray).push_back(*elem);
+			tempRets.clear();
+		}
+		Element *toRet = new Element;
+		(*toRet).type = Global::_array;
+		(*toRet).data = any_t(elemArray);
+
+		rets.push_back(*toRet);
+
+		return Global::_ok;
 	}
 	else if (rightBkt == std::string::npos)
 		return Global::_fault;
-	
-	return Global::_ok;
+	else
+		return Global::_ok;
 }
 
 int Calculator::numeric(std::string &exp,
