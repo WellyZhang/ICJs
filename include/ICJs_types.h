@@ -31,6 +31,13 @@ class Global
  * type == 6 时 data指向...
  * type == 7 时 data指向一个Function实例
  */
+ class Function
+{
+	public:
+		std::string key;
+		std::vector<std::string> param_names;
+		std::vector<std::string> body;
+};
 
 class Element
 {
@@ -39,14 +46,27 @@ class Element
 		int type;
 		any_t data;
 		Element(){ key = ""; type = Global::_undefined; data = NULL; };
+		Element(std::string _key, int _type, any_t _data=NULL){
+			key = _key;
+			type = _type;
+			switch (type){
+			case 0:case 1:data = NULL;
+				break;
+			case 2:data = (std::string*)_data;
+				break;
+			case 3:data = (double*)_data;
+				break;
+			case 4:data = (bool*)_data;
+				break;
+			case 5:data = (std::vector<Element>*)_data;
+				break;
+			case 6:break;
+			case 7:data = (Function*)_data;
+				break;
+			default:data = NULL;
+			}
+		}
 };
 
-class Function
-{
-	public:
-		std::string key;
-		std::vector<std::string> param_names;
-		std::vector<std::string> body;		
-};
 
 #endif ICJS_TYPES_H
