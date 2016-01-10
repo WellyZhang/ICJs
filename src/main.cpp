@@ -43,9 +43,28 @@ int main(int argc, char **argv)
 	a.type = Global::_number;
 	a.data = any_t(new double(5));
 	variables[a.key] = a;
+	Element b;
+	b.key = "B";
+	b.type = Global::_number;
+	b.data = any_t(new double(2.5));
+	variables[b.key] = b;
+	vector<string> funcBody;
+	funcBody.push_back("return 10;");
+	vector<string> paramNames;
+	paramNames.push_back("A");
+	paramNames.push_back("B");
+	Function foo;
+	foo.key = "foo";
+	foo.body = funcBody;
+	foo.param_names = paramNames;
+	Element func;
+	func.key = foo.key;
+	func.type = Global::_function;
+	func.data = any_t(&foo);
+	variables[func.key] = func;
 
-	string s = "A * ((3.2 - 1) + 2) * 2 + 4 * (2 + 1)";
-	int b = Calculator::calculate(s, variables, rets, output_);
+	string s = "foo(3.5, 2) + A * B - 4.2";
+	int c = Calculator::calculate(s, variables, rets, output_);
 	for (int i = 0; i < rets.size(); i++)
 	{
 		cout << *(double *)rets[i].data << endl;

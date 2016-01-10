@@ -46,8 +46,7 @@ class Function
 	public:
 		std::string key;
 		std::vector<std::string> param_names;
-		std::vector<std::string> body;
-		
+		std::vector<std::string> body;		
 };
 
 #endif ICJS_TYPES_H

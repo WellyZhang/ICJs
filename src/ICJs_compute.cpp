@@ -1,8 +1,10 @@
 #include "ICJs_compute.h"
 #include "ICJs_util.h"
 #include "ICJs_types.h"
+#include "ICJs_parser.h"
 #include <stack>
 #include <cmath>
+#include <ctype.h>
 //#include <iostream>
 #include <sstream>
 
@@ -13,9 +15,11 @@ int Calculator::calculate(std::string &exp,
 	std::vector<Element> &rets,
 	std::vector<Element> &output)
 {
+	Parser p;
 	size_t index;
 	size_t start;
 	int counter = 0;
+	int funcFound = 0;
 	while ((start = exp.find_first_of("(")) != std::string::npos)
 	{
 		counter++;
@@ -39,10 +43,40 @@ int Calculator::calculate(std::string &exp,
 		flag = calculate(component, variables, tempRets, output);
 		if (flag == Global::_fault)
 			return Global::_fault;
+		std::ostringstream os;
+		for (int i = 0; i < tempRets.size(); i++)
+		{
+			os << *(double *)(tempRets[i].data);
+			if (i != tempRets.size() - 1)
+				os << ",";
+		}
+		if (start != 0 && isalnum(exp.at(start - 1)))
+		{
+			exp.replace(start + 1, end - start - 1, os.str());
+			for (end = start + 1; end < exp.length(); end++)
+				if (exp.at(end) == ')')
+					break;
+			int j;
+			for (j = start - 1; j >= 0; j--)
+			{
+				if (exp.at(j) == ' ')
+					break;
+			}
+			std::string funcName = exp.substr(j + 1, start - j - 1);
+			int flag = isFunction(funcName, variables);
+			if (flag == 0)
+				return Global::_fault;
+			Element tempRet;
+			tempRet.data = any_t(new double(*(double *)tempRets[0].data + *(double *)tempRets[1].data));
+			//p.run_func(f, variables, tempRets, tempRet, output);
 			std::ostringstream os;
-		os << *(double *)(tempRets[0].data);
-		exp.replace(start, end - start + 1, os.str());
-
+			os << *(double *)(tempRet.data);
+			exp.replace(j + 1, end - j, os.str());
+		}
+		else
+		{
+			exp.replace(start, end - start + 1, os.str());
+		}
 	}
 	std::vector<std::string> commaSeps;
 	Util::split(exp, ",", &commaSeps);
@@ -53,8 +87,8 @@ int Calculator::calculate(std::string &exp,
 		flag = RPNCalc(commaSeps[i], variables, toCommaRet);
 		if (flag == Global::_fault)
 			return Global::_fault;
+		rets.push_back(toCommaRet);
 	}
-	rets.push_back(toCommaRet);
 
 	return Global::_ok;
 }
