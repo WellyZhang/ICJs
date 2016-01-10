@@ -5,25 +5,28 @@
 #include <stack>
 #include <cmath>
 #include <ctype.h>
-//#include <iostream>
 #include <sstream>
 
-
-
-int Calculator::calculate(std::string &exp,
+int Calculator::numeric(std::string &exp,
 	std::map<std::string, Element> &variables,
 	std::vector<Element> &rets,
 	std::vector<Element> &output)
 {
-	Parser p;
 	size_t index;
 	size_t start;
 	int counter = 0;
-	int funcFound = 0;
+
 	while ((start = exp.find_first_of("(")) != std::string::npos)
 	{
+		int flag;
+		size_t end;
+		std::string component;
+		std::vector<Element> tempRets;
+		std::ostringstream os;
+
 		counter++;
 		index = start + 1;
+
 		while (index < exp.length())
 		{
 			if (exp.at(index) == '(')
@@ -34,42 +37,52 @@ int Calculator::calculate(std::string &exp,
 				break;
 			index++;
 		}
-		size_t end = index;
+
+		end = index;
 		if (end >= exp.length())
 			return Global::_fault;
-		std::string component = exp.substr(start + 1, end - start - 1);
-		int flag;
-		std::vector<Element> tempRets;
-		flag = calculate(component, variables, tempRets, output);
+
+		component = exp.substr(start + 1, end - start - 1);
+		flag = numeric(component, variables, tempRets, output);
+
 		if (flag == Global::_fault)
 			return Global::_fault;
-		std::ostringstream os;
+
 		for (int i = 0; i < tempRets.size(); i++)
 		{
 			os << *(double *)(tempRets[i].data);
 			if (i != tempRets.size() - 1)
 				os << ",";
 		}
+
 		if (start != 0 && isalnum(exp.at(start - 1)))
 		{
+			int j;
+			int flag;
+			std::string funcName;
+			Element tempRet;
+			std::ostringstream os;
+
 			exp.replace(start + 1, end - start - 1, os.str());
 			for (end = start + 1; end < exp.length(); end++)
 				if (exp.at(end) == ')')
 					break;
-			int j;
+			
 			for (j = start - 1; j >= 0; j--)
 			{
 				if (exp.at(j) == ' ')
 					break;
 			}
-			std::string funcName = exp.substr(j + 1, start - j - 1);
-			int flag = isFunction(funcName, variables);
+
+			funcName = exp.substr(j + 1, start - j - 1);
+			flag = isFunction(funcName, variables);
 			if (flag == 0)
 				return Global::_fault;
-			Element tempRet;
+
+			// TODO
 			tempRet.data = any_t(new double(*(double *)tempRets[0].data + *(double *)tempRets[1].data));
 			//p.run_func(f, variables, tempRets, tempRet, output);
-			std::ostringstream os;
+
 			os << *(double *)(tempRet.data);
 			exp.replace(j + 1, end - j, os.str());
 		}
@@ -78,10 +91,13 @@ int Calculator::calculate(std::string &exp,
 			exp.replace(start, end - start + 1, os.str());
 		}
 	}
+
 	std::vector<std::string> commaSeps;
-	Util::split(exp, ",", &commaSeps);
 	Element toCommaRet;
 	int flag;
+	
+	Util::split(exp, ",", &commaSeps);
+	
 	for (int i = 0; i < commaSeps.size(); i++)
 	{
 		flag = RPNCalc(commaSeps[i], variables, toCommaRet);

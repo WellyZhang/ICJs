@@ -63,8 +63,8 @@ int main(int argc, char **argv)
 	func.data = any_t(&foo);
 	variables[func.key] = func;
 
-	string s = "foo(3.5, 2) + A * B - 4.2";
-	int c = Calculator::calculate(s, variables, rets, output_);
+	string s = "foo(3.5 + 2, foo(2, 3)) + A * B - 4.2";
+	int c = Calculator::numeric(s, variables, rets, output_);
 	for (int i = 0; i < rets.size(); i++)
 	{
 		cout << *(double *)rets[i].data << endl;
