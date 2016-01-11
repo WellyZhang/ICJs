@@ -156,10 +156,10 @@ int Calculator::numeric(std::string &exp,
 			switch(tempRets[i].type)
 			{
 				case Global::_number:
-				case Gloabl::_boolean:
+				case Global::_boolean:
 					os << *(double *)(tempRets[i].data);
 					break;
-				case Global::_string;
+				case Global::_string:
 					os << *(std::string *)(tempRets[i].data);
 					break;
 			}
