@@ -234,7 +234,6 @@ int _parse(vector<string> &input,
 			
 			cond = it->substr(first + 1, last - first - 1);
 			int error = Calculator::calculate(cond, variables, ret, output);
-			//int error = Calculator::RPNCalc(cond, variables, ret, output);
 			if (error != Global::_ok)
 				return error;
 			if (ret[0].type != Global::_boolean)
@@ -429,7 +428,7 @@ int _parse(vector<string> &input,
 			
 			function->body = vector<string>(it + 2, vector_find_bracket(input, it + 1) - 1);
 
-			Element *element = new Element(function->key, Global::_function, function);
+			Element *element = new Element(function->key, Global::_function, &function);
 
 			variables[function->key] = *element;
 			it = vector_find_bracket(input, it + 1);
