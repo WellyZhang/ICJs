@@ -28,3 +28,78 @@ std::string &Util::trim(std::string &s)
 	s.erase(s.find_last_not_of(" ") + 1);
 	return s;
 }
+
+void Util::rmBlankInParenth(std::string &s)
+{
+	size_t start = s.find_first_of("(");
+	if (start == std::string::npos)
+	{
+		return;
+	}
+	int counter = 1;
+	int blankStart = 0, blankEnd = 0, blankLength = 0;
+	bool blankFound = false;
+	for (int i = start + 1; i < s.length(); i++)
+	{
+		if (s.at(i) == '(')
+		{
+			counter++;
+			continue;
+		}
+		else if (s.at(i) == ')')
+		{
+			counter--;
+			continue;
+		}
+
+		if (counter == 0)
+		{
+			continue;
+		}
+
+		if (s.at(i) == ' ' && !blankFound)
+		{
+			blankFound = true;
+			blankStart = i;
+		}
+		else if (blankFound && s.at(i) != ' ')
+		{
+			blankFound = false;
+			blankEnd = i - 1;
+			blankLength = blankEnd - blankStart + 1;
+			s.replace(blankStart, blankLength, "");
+			i -= blankLength;
+		}
+	}
+}
+
+int Util::numOfChar(std::string &s, char c)
+{
+	int counter = 0;
+	for (int i = 0; i < s.length(); i++)
+	{
+		if (s.at(i) == c)
+		{
+			counter++;
+		}
+	}
+	return counter;
+}
+
+/*
+void Util::numBlankPos(std::string &s, std::vector<int> pos)
+{
+	int length;
+	int start;
+	int end;
+	bool isIn = false;
+	for (int i = 0; i < s.length(); i++)
+	{
+		if (s.at(i) == '"')
+		{
+			isIn = ~isIn;
+		}
+		if (s.at(i) == ' ' && isIn
+	}
+}
+*/

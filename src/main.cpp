@@ -39,6 +39,7 @@ int main(int argc, char **argv)
 	vector<Element> output_;
 	vector<string> statements;
 
+	/*
 	statements.push_back("var a=[2, 10, 2 + 3];");
 	statements.push_back("var sum = 0;");
 	statements.push_back("for (var i:a)");
@@ -48,8 +49,8 @@ int main(int argc, char **argv)
 	Parser::parse(statements, variables, output_);
 
 	cout << *((double*)output_[0].data) << endl;
-
-	/*Element a;
+	*/
+	Element a;
 	a.key = "A";
 	a.type = Global::_number;
 	a.data = any_t(new double(5));
@@ -59,6 +60,11 @@ int main(int argc, char **argv)
 	b.type = Global::_number;
 	b.data = any_t(new double(2.5));
 	variables[b.key] = b;
+	Element d;
+	d.key = "D";
+	d.type = Global::_string;
+	d.data = any_t(new string("World"));
+	variables[d.key] = d;
 	vector<string> funcBody;
 	funcBody.push_back("return 10;");
 	vector<string> paramNames;
@@ -74,15 +80,19 @@ int main(int argc, char **argv)
 	func.data = any_t(&foo);
 	variables[func.key] = func;
 
-
-	string s = "[2, 3 + 4, foo(2, 3)]";//"5";//"foo(3.5 + 2, foo(2, 3)) + A * B - 4.2";
+	/*
+	string s = "[2, 3 + 4, foo(foo(2, 5), 2 + 2)]";//"5";//"foo(3.5 + 2, foo(2, 3)) + A * B - 4.2";
 	int c = Calculator::calculate(s, variables, rets, output_);
 	for (int i = 0; i < (*(vector<Element> *)(rets[0].data)).size(); i++)
 	{
 		cout << *(double *)(*(vector<Element> *)(rets[0].data))[i].data << endl;
 	}
-	system("pause");*/
+	*/
 
+	string s = "\"Hello\" + D";
+	int c = Calculator::RPNCalc(s, variables, ret);
+	cout << *(string *)(ret.data) << endl;
+	
 	/*
 	int i = 0;
 	while (true)
@@ -124,6 +134,7 @@ int main(int argc, char **argv)
 		cout << endl;
 	}
 	*/
+	system("pause");
 	return 0;
 }
 

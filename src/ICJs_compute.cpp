@@ -7,6 +7,9 @@
 #include <ctype.h>
 #include <sstream>
 
+const int numericMode = Global::_number;
+const int stringMode = Global::_string;
+
 int Calculator::calculate(std::string &exp,
 	std::map<std::string, Element> &variables,
 	std::vector<Element> &rets,
@@ -19,7 +22,7 @@ int Calculator::calculate(std::string &exp,
 		
 	leftBkt = exp.find_first_of("[");
 	rightBkt = exp.find_first_of("]");
-	if (leftBkt != std::string::npos)
+	if (leftBkt != std::string::npos && rightBkt != std::string::npos)
 	{
 		std::string inArray;
 		std::vector<std::string> aryElements;
@@ -30,34 +33,41 @@ int Calculator::calculate(std::string &exp,
 		inArray = exp.substr(leftBkt + 1, rightBkt - leftBkt - 1);
 		Util::split(inArray, ",", &aryElements);
 		std::vector<std::string> fusedElements;
+		
 		bool isSep = false;
 		std::string toBeFused = "";
+		int numOfParenth = 0;
+		int localParenth = 0;
 		for (int i = 0; i < aryElements.size(); i++)
 		{
-			if (aryElements[i].find_first_of("(") != std::string::npos && !isSep)
+			localParenth = 0;
+			localParenth += Util::numOfChar(aryElements[i], '(');
+			localParenth -= Util::numOfChar(aryElements[i], ')');
+			numOfParenth += localParenth;
+			if (numOfParenth < 0)
 			{
-				isSep = true;
-				toBeFused += aryElements[i];
-				toBeFused += ",";
+				return Global::_fault;
 			}
-			else if (isSep && aryElements[i].find_first_of(")") != std::string::npos)
-			{
-				isSep = false;
-				toBeFused += aryElements[i];
-				fusedElements.push_back(toBeFused);
-				toBeFused = "";
-			}
-			else if (isSep)
+			if (numOfParenth > 0)
 			{
 				toBeFused += aryElements[i];
 				toBeFused += ",";
 			}
-			else if (!isSep)
+			if (numOfParenth == 0)
 			{
-				fusedElements.push_back(aryElements[i]);
+				if (localParenth == 0)
+				{		
+					fusedElements.push_back(aryElements[i]);
+				}
+				if (localParenth < 0)
+				{
+					toBeFused += aryElements[i];
+					fusedElements.push_back(toBeFused);
+					toBeFused = "";
+				}
 			}
-
 		}
+		
 
 		for (int i = 0; i < fusedElements.size(); i++)
 		{
@@ -76,10 +86,13 @@ int Calculator::calculate(std::string &exp,
 
 		return Global::_ok;
 	}
-	else if (rightBkt == std::string::npos)
+	else if ((leftBkt == std::string::npos && rightBkt != std::string::npos )|| 
+		(leftBkt != std::string::npos && rightBkt == std::string::npos))
 		return Global::_fault;
 	else
-		return Global::_ok;
+	{
+		return numeric(exp, variables, rets, output);
+	}
 }
 
 int Calculator::numeric(std::string &exp,
@@ -158,7 +171,7 @@ int Calculator::numeric(std::string &exp,
 
 			// TODO
 			tempRet.data = any_t(new double(*(double *)tempRets[0].data + *(double *)tempRets[1].data));
-			//p.run_func(f, variables, tempRets, tempRet, output);
+			//Parser::run_func(*((Function *)(variables[funcName].data)), variables, tempRets, tempRet, output);
 
 			os << *(double *)(tempRet.data);
 			exp.replace(j + 1, end - j, os.str());
@@ -188,7 +201,9 @@ int Calculator::numeric(std::string &exp,
 
 int Calculator::isOperator(std::string input)
 {
-	if (input == "**" || input == "*" || input == "/" || input == "+" || input == "-" || input == "%")
+	if (input == "**" || input == "*" || input == "/" || input == "+" || input == "-" || input == "%" || 
+		input == "and" || input == "or" || input == "not" || input == ">=" || input == "<=" ||
+		input == "==" || input == "!=" || input == ">" || input == "<")
 		return 1;
 	else 
 		return 0;
@@ -197,11 +212,19 @@ int Calculator::isOperator(std::string input)
 int Calculator::priority(std::string opt)
 {
 	if (opt == "**")
+		return 6;
+	if (opt == "not")
+		return 5;
+	if (opt == "*" || opt == "/" || opt == "%")
+		return 4;
+	if (opt == "+" || opt == "-")
 		return 3;
-	else if (opt == "*" || opt == "/" || opt == "%")
+	if (opt == ">=" || opt == "<=" || opt == ">" || opt == "<")
 		return 2;
-	else
+	if (opt == "==" || opt == "!=")
 		return 1;
+	if (opt == "and" || opt == "or")
+		return 0;
 }
 
 int Calculator::isFunction(std::string input, std::map<std::string, Element> &variables)
@@ -220,7 +243,7 @@ int Calculator::isFunction(std::string input, std::map<std::string, Element> &va
 		return 0;
 }
 
-int Calculator::isVar(std::string input, std::map<std::string, Element> &variables)
+int Calculator::isNumVar(std::string input, std::map<std::string, Element> &variables)
 {
 	std::map<std::string, Element>::iterator it;
 	it = variables.find(input);
@@ -237,6 +260,47 @@ int Calculator::isVar(std::string input, std::map<std::string, Element> &variabl
 		
 }
 
+int Calculator::isStringVar(std::string input, std::map<std::string, Element> &variables)
+{
+	std::map<std::string, Element>::iterator it;
+	it = variables.find(input);
+	if (it != variables.end())
+	{
+		if (it->second.type == Global::_string)
+			return 2;
+	}
+	else
+	{
+		if (input.at(0) == '"' && input.at(input.length() - 1) == '"')
+			return 1;
+	}
+	return 0;
+}
+
+int Calculator::isLogic(std::string input)
+{
+	size_t indicator;
+	indicator = input.find_first_of("==");
+	if (indicator != std::string::npos)
+		return 1;
+	indicator = input.find_first_of("!=");
+	if (indicator != std::string::npos)
+		return 1;
+	indicator = input.find_first_of(">=");
+	if (indicator != std::string::npos)
+		return 1;
+	indicator = input.find_first_of("<=");
+	if (indicator != std::string::npos)
+		return 1;
+	indicator = input.find_first_of("<");
+	if (indicator != std::string::npos)
+		return 1;
+	indicator = input.find_first_of(">");
+	if (indicator != std::string::npos)
+		return 1;
+	return 0;
+}
+
 int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &variables, Element &ret)
 {
 	Util::trim(input);
@@ -245,38 +309,73 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 	std::stack<std::string> optStack;
 	std::stack<std::string> expStack;
 	std::stack<std::string> reverse;
-	std::stack<double> resultStack;
+	std::stack<double> numericStack;
+	std::stack<bool> logicalStack;
+	std::stack<std::string> stringStack;
 
 	double num;
+	std::string s;
+	int mode = numericMode;
+
+	bool log = isLogic(input);
+	
+	if (isStringVar(ops[0], variables))
+	{
+		mode = stringMode;
+	}
+
 	int indicator;
 
 	if (ops.size() % 2 == 0)
 		return Global::_fault;
+
 	for (int i = 0; i < ops.size(); i++)
 	{
 		if (i % 2 == 0)
 		{
-			indicator = isVar(ops[i], variables);
-			if (indicator == 1)
+			if (mode == numericMode)
 			{
-				expStack.push(ops[i]);
+				indicator = isNumVar(ops[i], variables);
+				if (indicator == 1)
+				{
+					expStack.push(ops[i]);
+				}
+				else if (indicator == 2)
+				{
+					std::map<std::string, Element>::iterator it;
+					it = variables.find(ops[i]);
+					num = *(double *)it->second.data;
+					std::ostringstream os;
+					os << num;
+					expStack.push(os.str());
+				}
+				else
+					return Global::_fault;
 			}
-			else if (indicator == 2)
+			if (mode == stringMode)
 			{
-				std::map<std::string, Element>::iterator it;
-				it = variables.find(ops[i]);
-				num = *(double *)it->second.data;
-				std::ostringstream os;
-				os << num;
-				expStack.push(os.str());
+				indicator = isStringVar(ops[i], variables);
+				if (indicator == 1)
+				{
+					expStack.push(ops[i].substr(1, ops[i].length() - 2));
+				}
+				else if (indicator == 2)
+				{
+					std::map<std::string, Element>::iterator it;
+					it = variables.find(ops[i]);
+					s = *(std::string *)it->second.data;
+					expStack.push(s);
+				}
+				else
+					return Global::_fault;
 			}
-			else
-				return Global::_fault;
 		}
 		else
 		{
 			if (isOperator(ops[i]))
 			{
+				if (mode == stringMode && ops[i] != "+")
+					return Global::_fault;
 				while (optStack.size() != 0)
 				{
 					std::string tmp = optStack.top();
@@ -312,43 +411,139 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 		reverse.push(temp);
 	}
 
-	double op1, op2;
-	while (reverse.size() != 0)
+	if (mode == numericMode)
 	{
-		std::string temp = reverse.top();
-		reverse.pop();
-		if (!isOperator(temp))
+		double op1, op2;
+		while (reverse.size() != 0)
 		{
-			std::istringstream(temp) >> op1;
-			resultStack.push(op1);
+			std::string temp = reverse.top();
+			reverse.pop();
+			if (!isOperator(temp))
+			{
+				std::istringstream(temp) >> op1;
+				numericStack.push(op1);
+			}
+			else
+			{
+				op2 = numericStack.top();
+				numericStack.pop();
+				if (temp != "not")
+				{
+					op1 = numericStack.top();
+					numericStack.pop();
+					if (temp == "**")
+						numericStack.push(pow(op1, op2));
+					if (temp == "*")
+						numericStack.push(op1 * op2);
+					if (temp == "/")
+						numericStack.push(op1 / op2);
+					if (temp == "+")
+						numericStack.push(op1 + op2);
+					if (temp == "-")
+						numericStack.push(op1 - op2);
+					if (temp == "%")
+						numericStack.push((int)op1 % (int)op2);
+					if (temp == "==")
+						numericStack.push((double)(op1 == op2));
+					if (temp == ">=")
+						numericStack.push((double)(op1 >= op2));
+					if (temp == "<=")
+						numericStack.push((double)(op1 <= op2));
+					if (temp == "!=")
+						numericStack.push((double)(op1 != op2));
+					if (temp == ">")
+						numericStack.push((double)(op1 > op2));
+					if (temp == "<")
+						numericStack.push((double)(op1 < op2));
+					if (temp == "and")
+						numericStack.push((double)(op1 && op2));
+					if (temp == "||")
+						numericStack.push((double)(op1 || op2));
+				}
+				else
+				{
+					if (op2 != 0)
+						numericStack.push(0.0);
+					else
+						numericStack.push(1.0);
+				}
+			}
 		}
+		if (numericStack.size() != 1 || reverse.size() != 0)
+			return Global::_fault;
 		else
 		{
-			op2 = resultStack.top();
-			resultStack.pop();
-			op1 = resultStack.top();
-			resultStack.pop();
-			if (temp == "**")
-				resultStack.push(pow(op1, op2));
-			if (temp == "*")
-				resultStack.push(op1 * op2);
-			if (temp == "/")
-				resultStack.push(op1 / op2);
-			if (temp == "+")
-				resultStack.push(op1 + op2);
-			if (temp == "-")
-				resultStack.push(op1 - op2);
-			if (temp == "%")
-				resultStack.push((int)op1 % (int)op2);
+			if (!log)
+			{
+				ret.type = Global::_number;
+				ret.data = any_t(new double(numericStack.top()));
+				return Global::_ok;
+			}
+			else
+			{
+				ret.type = Global::_boolean;
+				ret.data = any_t(new bool(numericStack.top()));
+				return Global::_ok;
+			}
 		}
 	}
-	if (resultStack.size() != 1 || reverse.size() != 0)
-		return Global::_fault;
-	else
+	if (mode == stringMode)
 	{
-		ret.type = Global::_number;
-		ret.data = any_t(new double(resultStack.top()));
-		return Global::_ok;
+		std::string s1, s2;
+		bool tOrF;
+		while (reverse.size() != 0)
+		{
+			std::string temp = reverse.top();
+			reverse.pop();
+			if (!isOperator(temp))
+			{
+				stringStack.push(temp);
+			}
+			else
+			{
+				s2 = stringStack.top();
+				stringStack.pop();
+				s1 = stringStack.top();
+				stringStack.pop();
+				if (temp == "+")
+					stringStack.push(s1 + s2);
+				else if (temp == "==")
+				{
+					if (s1 == s2)
+						tOrF = true;
+					else
+						tOrF = false;
+					break;
+				}
+				else if (temp == "!=")
+				{
+					if (s1 != s2)
+						tOrF = true;
+					else
+						tOrF = false;
+					break;
+				}
+				else
+					return Global::_fault;
+			}
+		}
+		if (stringStack.size() != 1 || reverse.size() != 0)
+			return Global::_fault;
+		else
+		{
+			if (!log)
+			{
+				ret.type = Global::_string;
+				ret.data = any_t(new std::string(stringStack.top()));
+				return Global::_ok;
+			}
+			else
+			{
+				ret.type = Global::_boolean;
+				ret.data = any_t(new bool(tOrF));
+				return Global::_ok;
+			}
+		}
 	}
 	
 }

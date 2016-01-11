@@ -20,9 +20,12 @@ class Calculator
 			std::vector<Element> &output);
 		static int isOperator(std::string input);
 		static int isFunction(std::string input, std::map<std::string, Element> &variables);
-		static int isVar(std::string input, std::map<std::string, Element> &variables);
+		static int isNumVar(std::string input, std::map<std::string, Element> &variables);
 		static int RPNCalc(std::string input, std::map<std::string, Element> &variables, Element &ret);
 		static int priority(std::string opt);
+		static int isStringVar(std::string input, std::map<std::string, Element> &variables);
+		static int isLogic(std::string input);
+
 };
 
 #endif ICJS_COMPUTE_H
