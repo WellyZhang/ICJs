@@ -10,6 +10,9 @@
 const int numericMode = Global::_number;
 const int stringMode = Global::_string;
 
+// TODO
+// All output variables are left unhandled
+
 int Calculator::calculate(std::string &exp,
 	std::map<std::string, Element> &variables,
 	std::vector<Element> &rets,
@@ -20,6 +23,7 @@ int Calculator::calculate(std::string &exp,
 	size_t rightBkt;
 	std::vector<Element> *elemArray = new std::vector<Element>;
 		
+	// Handle the array 
 	leftBkt = exp.find_first_of("[");
 	rightBkt = exp.find_first_of("]");
 	if (leftBkt != std::string::npos && rightBkt != std::string::npos)
@@ -28,12 +32,14 @@ int Calculator::calculate(std::string &exp,
 		std::vector<std::string> aryElements;
 		std::vector<Element> tempRets;
 
-		if (rightBkt == std::string::npos || rightBkt != exp.length() - 1 || rightBkt < leftBkt)
+		if (rightBkt != exp.length() - 1 || rightBkt < leftBkt)
 			return Global::_fault;
 		inArray = exp.substr(leftBkt + 1, rightBkt - leftBkt - 1);
 		Util::split(inArray, ",", &aryElements);
 		std::vector<std::string> fusedElements;
 		
+		// Note that "," might seperate the component of function into several parts
+		// and the following code snippet fixes thie problem
 		bool isSep = false;
 		std::string toBeFused = "";
 		int numOfParenth = 0;
@@ -68,7 +74,7 @@ int Calculator::calculate(std::string &exp,
 			}
 		}
 		
-
+		// Compute each component of an array
 		for (int i = 0; i < fusedElements.size(); i++)
 		{
 			Element *elem = new Element;
@@ -78,6 +84,8 @@ int Calculator::calculate(std::string &exp,
 			(*elemArray).push_back(*elem);
 			tempRets.clear();
 		}
+
+		// Note that each component in the array after computation is "newed"
 		Element *toRet = new Element;
 		(*toRet).type = Global::_array;
 		(*toRet).data = any_t(elemArray);
@@ -91,6 +99,7 @@ int Calculator::calculate(std::string &exp,
 		return Global::_fault;
 	else
 	{
+		// Else this is not an array expression
 		return numeric(exp, variables, rets, output);
 	}
 }
@@ -106,8 +115,10 @@ int Calculator::numeric(std::string &exp,
 
 	Util::trim(exp);
 
+	// Handle numerical, logical and string expression computation
 	while ((start = exp.find_first_of("(")) != std::string::npos)
 	{
+		// First find the deepest parentheses in the expressions
 		int flag;
 		size_t end;
 		std::string component;
@@ -132,15 +143,26 @@ int Calculator::numeric(std::string &exp,
 		if (end >= exp.length())
 			return Global::_fault;
 
+		// Handle the deepest parenthesess
 		component = exp.substr(start + 1, end - start - 1);
 		flag = numeric(component, variables, tempRets, output);
 
 		if (flag == Global::_fault)
 			return Global::_fault;
 
+		// Handle returns from the deepest ()
 		for (int i = 0; i < tempRets.size(); i++)
 		{
-			os << *(double *)(tempRets[i].data);
+			switch(tempRets[i].type)
+			{
+				case Global::_number:
+				case Global::_boolean:
+					os << *(double *)(tempRets[i].data);
+					break;
+				case Global::_string:
+					os << *(std::string *)(tempRets[i].data);
+					break;
+			}
 			if (i != tempRets.size() - 1)
 				os << ",";
 		}
@@ -170,8 +192,8 @@ int Calculator::numeric(std::string &exp,
 				return Global::_fault;
 
 			// TODO
-			tempRet.data = any_t(new double(*(double *)tempRets[0].data + *(double *)tempRets[1].data));
-			//Parser::run_func(*((Function *)(variables[funcName].data)), variables, tempRets, tempRet, output);
+			//tempRet.data = any_t(new double(*(double *)tempRets[0].data + *(double *)tempRets[1].data));
+			Parser::run_func(*((Function *)(variables[funcName].data)), variables, tempRets, tempRet, output);
 
 			os << *(double *)(tempRet.data);
 			exp.replace(j + 1, end - j, os.str());
