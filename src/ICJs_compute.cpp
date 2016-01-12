@@ -170,8 +170,10 @@ int Calculator::numeric(std::string &exp,
 		{
 			switch(tempRets[i].type)
 			{
-				case Global::_number:
 				case Global::_boolean:
+					os << *(bool *)(tempRets[i].data);
+					break;
+				case Global::_number:
 					os << *(double *)(tempRets[i].data);
 					break;
 				case Global::_string:
@@ -206,12 +208,14 @@ int Calculator::numeric(std::string &exp,
 			if (flag == 0)
 				return Global::_fault;
 
-			//Parser::run_func(*((Function *)(variables[funcName].data)), variables, tempRets, funcRets, output);
+			Parser::run_func(*((Function *)(variables[funcName].data)), variables, tempRets, funcRets, output);
 			
 			std::ostringstream newOS;
 			switch (funcRets[0].type)
 			{
 				case Global::_boolean:
+					newOS << *(bool *)funcRets[0].data;
+					break;
 				case Global::_number:
 					newOS << *((double *)funcRets[0].data);
 					break;
@@ -347,6 +351,8 @@ int Calculator::isLogic(std::vector<std::string> inputs)
 int Calculator::isComma(std::string input)
 {
 	int counter = 0;
+	if (input.at(0) == '[' && input.at(input.length() - 1) == ']')
+		return 0;
 	for (int i = 0; i < input.length(); i++)
 	{
 		if (input.at(i) == '(')
