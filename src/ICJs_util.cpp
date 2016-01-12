@@ -1,21 +1,62 @@
 #include "ICJs_util.h"
+#include "ICJs_compute.h"
 #include <string>
 #include <vector>
 
-void Util::split(std::string& s, std::string delim, std::vector<std::string> *ret)
+void Util::split(std::string& s, std::string delim, std::vector<std::string> *ret, bool preserveBlank)
 {
 	size_t last = 0;
 	size_t index = s.find_first_of(delim, last);
+	std::vector<std::string> temp;
+	std::string tempS = "";
+
 	while (index != std::string::npos)
 	{
-		ret->push_back(trim(s.substr(last, index - last)));
+		temp.push_back(trim(s.substr(last, index - last)));
 		last = index + 1;
 		index = s.find_first_of(delim, last);
 	}
 	if (index - last > 0)
 	{
-		ret->push_back(trim(s.substr(last, index - last)));
+		temp.push_back(trim(s.substr(last, index - last)));
 	}
+	
+	if (preserveBlank)
+	{
+		int blankFound = 0;
+		for (int i = 0; i < temp.size(); i++)
+		{
+			if (Calculator::isOperator(temp[i]))
+			{
+
+				if (tempS != "")
+				{
+					ret->push_back(tempS);
+					tempS = "";
+				}
+				ret->push_back(temp[i]);
+			}
+			else
+			{
+				if (temp[i] == "")
+				{
+					blankFound = true;
+					tempS += " ";
+				}
+				else if (temp[i] == "\"" && blankFound)
+				{
+					tempS += " ";
+					tempS += temp[i];
+					blankFound = false;
+				}
+				else
+					tempS += temp[i];
+			}
+		}
+		if (tempS != "")
+			ret->push_back(tempS);
+	}
+
 }
 
 std::string &Util::trim(std::string &s)
@@ -29,6 +70,7 @@ std::string &Util::trim(std::string &s)
 	return s;
 }
 
+/*
 void Util::rmBlankInParenth(std::string &s)
 {
 	size_t start = s.find_first_of("(");
@@ -72,6 +114,7 @@ void Util::rmBlankInParenth(std::string &s)
 		}
 	}
 }
+*/
 
 int Util::numOfChar(std::string &s, char c)
 {

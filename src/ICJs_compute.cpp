@@ -26,7 +26,8 @@ int Calculator::calculate(std::string &exp,
 	// Handle the array 
 	leftBkt = exp.find_first_of("[");
 	rightBkt = exp.find_first_of("]");
-	if (leftBkt != std::string::npos && rightBkt != std::string::npos)
+	int commaExp = isComma(exp);
+	if ((leftBkt != std::string::npos && rightBkt != std::string::npos) || commaExp)
 	{
 		std::string inArray;
 		std::vector<std::string> aryElements;
@@ -34,8 +35,11 @@ int Calculator::calculate(std::string &exp,
 
 		if (rightBkt != exp.length() - 1 || rightBkt < leftBkt)
 			return Global::_fault;
-		inArray = exp.substr(leftBkt + 1, rightBkt - leftBkt - 1);
-		Util::split(inArray, ",", &aryElements);
+
+		if (!commaExp)
+			inArray = exp.substr(leftBkt + 1, rightBkt - leftBkt - 1);
+
+		Util::split(inArray, ",", &aryElements, false);
 		std::vector<std::string> fusedElements;
 		
 		// Note that "," might seperate the component of function into several parts
@@ -86,11 +90,17 @@ int Calculator::calculate(std::string &exp,
 		}
 
 		// Note that each component in the array after computation is "newed"
-		Element *toRet = new Element;
-		(*toRet).type = Global::_array;
-		(*toRet).data = any_t(elemArray);
-
-		rets.push_back(*toRet);
+		if (!commaExp)
+		{
+			Element *toRet = new Element;
+			(*toRet).type = Global::_array;
+			(*toRet).data = any_t(elemArray);
+			rets.push_back(*toRet);
+		}
+		else
+		{
+			rets.push_back((*elemArray)[0]);
+		}
 
 		return Global::_ok;
 	}
@@ -99,7 +109,7 @@ int Calculator::calculate(std::string &exp,
 		return Global::_fault;
 	else
 	{
-		// Else this is not an array expression
+		// Else this is neither an array expression nor an comma expressions
 		return numeric(exp, variables, rets, output);
 	}
 }
@@ -167,13 +177,13 @@ int Calculator::numeric(std::string &exp,
 				os << ",";
 		}
 
+		// Function call is handled here
 		if (start != 0 && isalnum(exp.at(start - 1)))
 		{
 			int j;
 			int flag;
 			std::string funcName;
-			Element tempRet;
-			std::ostringstream os;
+			std::vector<Element> funcRets;
 
 			exp.replace(start + 1, end - start - 1, os.str());
 			for (end = start + 1; end < exp.length(); end++)
@@ -191,12 +201,22 @@ int Calculator::numeric(std::string &exp,
 			if (flag == 0)
 				return Global::_fault;
 
-			// TODO
-			//tempRet.data = any_t(new double(*(double *)tempRets[0].data + *(double *)tempRets[1].data));
-			Parser::run_func(*((Function *)(variables[funcName].data)), variables, tempRets, tempRet, output);
-
-			os << *(double *)(tempRet.data);
-			exp.replace(j + 1, end - j, os.str());
+			//Parser::run_func(*((Function *)(variables[funcName].data)), variables, tempRets, funcRets, output);
+			
+			std::ostringstream newOS;
+			switch (funcRets[0].type)
+			{
+				case Global::_boolean:
+				case Global::_number:
+					newOS << *((double *)funcRets[0].data);
+					break;
+				case Global::_string:
+					newOS << "\"";
+					newOS << *((std::string *)funcRets[0].data);
+					newOS << "\"";
+					break;
+			}
+			exp.replace(j + 1, end - j, newOS.str());
 		}
 		else
 		{
@@ -204,11 +224,14 @@ int Calculator::numeric(std::string &exp,
 		}
 	}
 
+	// Now every expressions in parentheses and functions have been computed
+	// and replaced by their actual value in the string expressions
+	// And this code snippet is responsible for the final evaluation of the string
 	std::vector<std::string> commaSeps;
 	Element toCommaRet;
 	int flag;
 	
-	Util::split(exp, ",", &commaSeps);
+	Util::split(exp, ",", &commaSeps, false);
 	
 	for (int i = 0; i < commaSeps.size(); i++)
 	{
@@ -247,6 +270,7 @@ int Calculator::priority(std::string opt)
 		return 1;
 	if (opt == "and" || opt == "or")
 		return 0;
+	return 0;
 }
 
 int Calculator::isFunction(std::string input, std::map<std::string, Element> &variables)
@@ -299,27 +323,34 @@ int Calculator::isStringVar(std::string input, std::map<std::string, Element> &v
 	return 0;
 }
 
-int Calculator::isLogic(std::string input)
+int Calculator::isLogic(std::vector<std::string> inputs)
 {
-	size_t indicator;
-	indicator = input.find_first_of("==");
-	if (indicator != std::string::npos)
-		return 1;
-	indicator = input.find_first_of("!=");
-	if (indicator != std::string::npos)
-		return 1;
-	indicator = input.find_first_of(">=");
-	if (indicator != std::string::npos)
-		return 1;
-	indicator = input.find_first_of("<=");
-	if (indicator != std::string::npos)
-		return 1;
-	indicator = input.find_first_of("<");
-	if (indicator != std::string::npos)
-		return 1;
-	indicator = input.find_first_of(">");
-	if (indicator != std::string::npos)
-		return 1;
+	for (int i = 0; i < inputs.size(); i++)
+	{
+		
+		if (inputs[i] == "true" || inputs[i] == "false")
+			return 1;
+		if (inputs[i] == ">=" || inputs[i] == "<=" || inputs[i] == "==" || inputs[i] == "<" || 
+			inputs[i] == ">" || inputs[i] == "!=")
+			return 1;
+		if (inputs[i] == "and" || inputs[i] == "or" || inputs[i] == "not")
+			return 1;
+	}
+	return 0;
+}
+
+int Calculator::isComma(std::string input)
+{
+	int counter = 0;
+	for (int i = 0; i < input.length(); i++)
+	{
+		if (input.at(i) == '(')
+			counter++;
+		if (input.at(i) == ')')
+			counter--;
+		if (counter == 0 && input.at(i) == ',')
+			return 1;
+	}
 	return 0;
 }
 
@@ -327,19 +358,18 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 {
 	Util::trim(input);
 	std::vector<std::string> ops;
-	Util::split(input, " ", &ops);
+	Util::split(input, " ", &ops, true);
 	std::stack<std::string> optStack;
 	std::stack<std::string> expStack;
 	std::stack<std::string> reverse;
 	std::stack<double> numericStack;
-	std::stack<bool> logicalStack;
 	std::stack<std::string> stringStack;
 
 	double num;
 	std::string s;
 	int mode = numericMode;
 
-	bool log = isLogic(input);
+	int log = isLogic(ops);
 	
 	if (isStringVar(ops[0], variables))
 	{
@@ -371,7 +401,11 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 					os << num;
 					expStack.push(os.str());
 				}
-				else
+				else if (ops[i] == "true")
+					expStack.push("1");
+				else if (ops[i] == "false")
+					expStack.push("0");
+				else 
 					return Global::_fault;
 			}
 			if (mode == stringMode)
@@ -388,7 +422,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 					s = *(std::string *)it->second.data;
 					expStack.push(s);
 				}
-				else
+				else 
 					return Global::_fault;
 			}
 		}
@@ -504,7 +538,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 			else
 			{
 				ret.type = Global::_boolean;
-				ret.data = any_t(new bool(numericStack.top()));
+				ret.data = any_t(new double(numericStack.top() != 0));
 				return Global::_ok;
 			}
 		}
@@ -512,7 +546,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 	if (mode == stringMode)
 	{
 		std::string s1, s2;
-		bool tOrF;
+		double tOrF = 0;
 		while (reverse.size() != 0)
 		{
 			std::string temp = reverse.top();
@@ -532,17 +566,17 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 				else if (temp == "==")
 				{
 					if (s1 == s2)
-						tOrF = true;
+						tOrF = 1.0;
 					else
-						tOrF = false;
+						tOrF = 0.0;
 					break;
 				}
 				else if (temp == "!=")
 				{
 					if (s1 != s2)
-						tOrF = true;
+						tOrF = 1.0;
 					else
-						tOrF = false;
+						tOrF = 0.0;
 					break;
 				}
 				else
@@ -562,10 +596,12 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 			else
 			{
 				ret.type = Global::_boolean;
-				ret.data = any_t(new bool(tOrF));
+				ret.data = any_t(new double(tOrF));
 				return Global::_ok;
 			}
 		}
 	}
+
+	return Global::_ok;
 	
 }

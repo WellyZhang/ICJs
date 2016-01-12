@@ -88,8 +88,11 @@ int main(int argc, char **argv)
 		cout << *(double *)(*(vector<Element> *)(rets[0].data))[i].data << endl;
 	}
 	*/
-
+	
 	string s = "\"Hello\" + D";
+	string t = "\"Hello   \" + D";
+	vector<string> test;
+	Util::split(t, " ", &test, true);
 	int c = Calculator::RPNCalc(s, variables, ret);
 	cout << *(string *)(ret.data) << endl;
 	
@@ -204,7 +207,7 @@ string writeOut(string in)
 {
 	vector<string> stmts;
 	string out;
-	Util::split(in, "\n", &stmts);
+	Util::split(in, "\n", &stmts, false);
 	out = in;
 	return out;
 }

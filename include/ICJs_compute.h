@@ -24,7 +24,8 @@ class Calculator
 		static int RPNCalc(std::string input, std::map<std::string, Element> &variables, Element &ret);
 		static int priority(std::string opt);
 		static int isStringVar(std::string input, std::map<std::string, Element> &variables);
-		static int isLogic(std::string input);
+		static int isLogic(std::vector<std::string> inputs);
+		static int isComma(std::string input);
 
 };
 
