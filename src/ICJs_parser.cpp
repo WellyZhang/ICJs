@@ -77,8 +77,9 @@ vsit vector_find_else(vector<string> &lines, vsit line)
 			..
 		else
 	*/
-	else
-		return it + 2;
+	else{
+		return it + 1;
+	}
 }
 
 vsit vector_find_next_case(vector<string> &lines, vsit line)
@@ -168,7 +169,7 @@ int _parse(vector<string> &input,
 	vector<Element> localVar;
 	vector<Element> cofflictVar;
 
-	while (it != input.end()){
+	while (it < input.end()){
 		ret.clear();
 		int end = it->find(';');
 		if (end == string::npos)
@@ -334,7 +335,9 @@ int _parse(vector<string> &input,
 		else if (oper == "case"){
 			int first = it->find('e');
 			int last = it->rfind(':');
-			exp = switch_exp + "==" + "(" + it->substr(first + 1, last - first - 1) + ")";
+			string value = it->substr(first + 1, last - first - 1);
+			string_dblank(value);
+			exp = switch_exp + " " + "==" + " " + "(" + value + ")";
 			int error = Calculator::calculate(exp, variables, ret, output);
 			assert(ret[0].type == Global::_boolean);
 
@@ -430,7 +433,7 @@ int _parse(vector<string> &input,
 			exp = it->substr(first + 2, last - first - 2);
 			string_dblank(exp);
 
-			Function *function=new Function;
+			Function *function = new Function;
 			function->key = exp;
 
 			first = last;
@@ -438,7 +441,7 @@ int _parse(vector<string> &input,
 			split(it->substr(first + 1, last - first - 1), ",", function->param_names);
 			for (vsit itt = function->param_names.begin(); itt != function->param_names.end(); itt++)
 				string_dblank(*itt);
-			
+
 			function->body = vector<string>(it + 2, vector_find_bracket(input, it + 1) - 1);
 
 			Element *element = new Element(function->key, Global::_function, function);
@@ -446,23 +449,17 @@ int _parse(vector<string> &input,
 			variables[function->key] = *element;
 			it = vector_find_bracket(input, it + 1);
 		}
+		else if (oper == "{"||oper=="}")
+			it++;
 		else {
-			if (it->find("=") != string::npos || it->find("==") == string::npos)
+			if (it->find("=") != string::npos && it->find("==") != it->find("="))
 			{
-				exp = it->substr(0, end);
-				int error = Calculator::calculate(exp, variables, ret, output);
-				if (error != Global::_ok)
-					return error;
-				output.push_back(ret[0]);
-				it++;
-			}
-			else{
 				int first = it->find("=");
 				string keylist = it->substr(0, first);
 				string_dblank(keylist);
 				vector<string> keys;
 				split(keylist, ",", keys);
-				
+
 				for (vector<string>::iterator itt = keys.begin(); itt != keys.end(); itt++){
 					if (variables.find(*itt) == variables.end())
 						return Global::_fault;
@@ -476,9 +473,19 @@ int _parse(vector<string> &input,
 
 				for (int i = 0; i < ret.size(); i++){
 					ret[i].key = keys[i];
-					variables[key] = ret[i];
+					variables[keys[i]] = ret[i];
 				}
 				it++;
+			}
+			else{
+				exp = it->substr(0, end);
+				int error = Calculator::calculate(exp, variables, ret, output);
+				if (error != Global::_ok)
+					return error;
+				for (int i = 0; i < ret.size(); i++)
+					output.push_back(ret[i]);
+				it++;
+				
 			}
 		}
 	}
@@ -522,3 +529,23 @@ int Parser::run_func(Function &func,
 	}
 	return Global::_ok;
 }
+
+/*statements.push_back("var a,b,c=1, 2, 3;");
+statements.push_back("switch (b)");
+statements.push_back("{");
+statements.push_back("case 1:");
+statements.push_back("a;");
+statements.push_back("break;");
+statements.push_back("case 2:");
+statements.push_back("b;");
+statements.push_back("break;");
+statements.push_back("}");
+
+Parser::parse(statements, variables, output_);
+for (int i = 0; i < output_.size(); i++){
+switch (output_[i].type){
+case Global::_number:
+cout << *(double*)output_[i].data << endl;
+break;
+}
+}*/
