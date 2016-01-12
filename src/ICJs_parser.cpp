@@ -186,37 +186,47 @@ int _parse(vector<string> &input,
 			int first = it->find('r');
 
 			if (last != string::npos){
-				key = it->substr(first + 1, last - first - 1);
-				string_dblank(key);
+				string keylist = it->substr(first + 1, last - first - 1);
+				string_dblank(keylist);
+				vector<string> keys;
+				split(keylist, ",", keys);
 				exp = it->substr(last + 1, end - last - 1);
 
 				int error = Calculator::calculate(exp, variables, ret, output);
 				if (error != Global::_ok){
 					return Global::_fault;
 				}
-				ret[0].key = key;
-				if (islocal){
-					if (variables.find(key) != variables.end()){
-						cofflictVar.push_back(variables[key]);
-						variables.erase(key);
+				if (ret.size() != keys.size())
+					return Global::_fault;
+				for (int i = 0; i < keys.size(); i++){
+					ret[i].key = keys[i];
+					if (islocal){
+						if (variables.find(keys[i]) != variables.end()){
+							cofflictVar.push_back(variables[keys[i]]);
+							variables.erase(keys[i]);
+						}
+						localVar.push_back(ret[i]);
 					}
-					localVar.push_back(ret[0]);
+					variables[keys[i]] = ret[i];
 				}
-				variables[key] = ret[0];
 				it++;
 			}
 			else{
-				key = it->substr(first + 1, end - first -1);
-				string_dblank(key);
+				string keylist = it->substr(first + 1, end - first -1);
+				string_dblank(keylist);
+				vector<string> keys;
+				split(keylist, ",", keys);
 
-				if (islocal){
-					if (variables.find(key) != variables.end()){
-						cofflictVar.push_back(variables[key]);
-						variables.erase(key);
+				for (int i = 0; i < keys.size(); i++){
+					if (islocal){
+						if (variables.find(keys[i]) != variables.end()){
+							cofflictVar.push_back(variables[keys[i]]);
+							variables.erase(keys[i]);
+						}
+						localVar.push_back(Element(keys[i], Global::_undefined));
 					}
-					localVar.push_back(Element(key, Global::_undefined));
+					variables[keys[i]] = Element(keys[i], Global::_undefined);
 				}
-				variables[key] = Element(key, Global::_undefined);
 				it++;
 			}
 		}
@@ -435,12 +445,39 @@ int _parse(vector<string> &input,
 			it = vector_find_bracket(input, it + 1);
 		}
 		else {
-			exp = it->substr(0, end);
-			int error = Calculator::numeric(exp, variables, ret, output);
-			if (error != Global::_ok)
-				return error;
-			output.push_back(ret[0]);
-			it++;
+			if (it->find("=") != string::npos || it->find("==") == string::npos)
+			{
+				exp = it->substr(0, end);
+				int error = Calculator::calculate(exp, variables, ret, output);
+				if (error != Global::_ok)
+					return error;
+				output.push_back(ret[0]);
+				it++;
+			}
+			else{
+				int first = it->find("=");
+				string keylist = it->substr(0, first);
+				string_dblank(keylist);
+				vector<string> keys;
+				split(keylist, ",", keys);
+				
+				for (vector<string>::iterator itt = keys.begin(); itt != keys.end(); itt++){
+					if (variables.find(*itt) == variables.end())
+						return Global::_fault;
+				}
+				exp = it->substr(first + 1, end - first - 1);
+				int error = Calculator::calculate(exp, variables, ret, output);
+				if (error != Global::_ok)
+					return error;
+				if (ret.size() != keys.size())
+					return Global::_fault;
+
+				for (int i = 0; i < ret.size(); i++){
+					ret[i].key = keys[i];
+					variables[key] = ret[i];
+				}
+				it++;
+			}
 		}
 	}
 	for (vector<Element>::iterator it = localVar.begin(); it != localVar.end(); it++){
