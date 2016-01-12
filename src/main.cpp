@@ -39,17 +39,7 @@ int main(int argc, char **argv)
 	vector<Element> output_;
 	vector<string> statements;
 
-	/*
-	statements.push_back("var a=[2, 10, 2 + 3];");
-	statements.push_back("var sum = 0;");
-	statements.push_back("for (var i:a)");
-	statements.push_back("sum=sum+i;");
-	statements.push_back("sum");
 
-	Parser::parse(statements, variables, output_);
-
-	cout << *((double*)output_[0].data) << endl;
-	*/
 	Element a;
 	a.key = "A";
 	a.type = Global::_number;
@@ -63,7 +53,7 @@ int main(int argc, char **argv)
 	Element d;
 	d.key = "D";
 	d.type = Global::_string;
-	d.data = any_t(new string("World"));
+	d.data = any_t(new string("Hello   "));
 	variables[d.key] = d;
 	vector<string> funcBody;
 	funcBody.push_back("return 10;");
@@ -79,22 +69,11 @@ int main(int argc, char **argv)
 	func.type = Global::_function;
 	func.data = any_t(&foo);
 	variables[func.key] = func;
-
-	/*
-	string s = "[2, 3 + 4, foo(foo(2, 5), 2 + 2)]";//"5";//"foo(3.5 + 2, foo(2, 3)) + A * B - 4.2";
-	int c = Calculator::calculate(s, variables, rets, output_);
-	for (int i = 0; i < (*(vector<Element> *)(rets[0].data)).size(); i++)
-	{
-		cout << *(double *)(*(vector<Element> *)(rets[0].data))[i].data << endl;
-	}
-	*/
 	
-	string s = "\"Hello\" + D";
-	string t = "\"Hello   \" + D";
-	vector<string> test;
-	Util::split(t, " ", &test, true);
-	int c = Calculator::RPNCalc(s, variables, ret);
-	cout << *(string *)(ret.data) << endl;
+	string t = "\"Hello   \" == D";
+
+	int c = Calculator::RPNCalc(t, variables, ret);
+	cout << *(bool *)(ret.data) << endl;
 	
 	/*
 	int i = 0;

@@ -354,6 +354,15 @@ int Calculator::isComma(std::string input)
 	return 0;
 }
 
+int Calculator::isLogicOperator(std::string input)
+{
+	if (input == "==" || input == "!=" || input == ">=" || input == "<=" || input == ">" ||
+		input == "<" || input == "and" || input == "or" || input == "not")
+		return 1;
+	else
+		return 0;
+}
+
 int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &variables, Element &ret)
 {
 	Util::trim(input);
@@ -430,7 +439,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 		{
 			if (isOperator(ops[i]))
 			{
-				if (mode == stringMode && ops[i] != "+")
+				if (mode == stringMode && ops[i] != "+" && ops[i] != "==" && ops[i] != "!=")
 					return Global::_fault;
 				while (optStack.size() != 0)
 				{
@@ -470,9 +479,10 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 	if (mode == numericMode)
 	{
 		double op1, op2;
+		std::string temp = "";
 		while (reverse.size() != 0)
 		{
-			std::string temp = reverse.top();
+			temp = reverse.top();
 			reverse.pop();
 			if (!isOperator(temp))
 			{
@@ -537,8 +547,16 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 			}
 			else
 			{
-				ret.type = Global::_boolean;
-				ret.data = any_t(new double(numericStack.top() != 0));
+				if (isLogicOperator(temp))
+				{
+					ret.type = Global::_boolean;
+					ret.data = any_t(new bool(numericStack.top() != 0));
+				}
+				else
+				{
+					ret.type = Global::_number;
+					ret.data = any_t(new double(numericStack.top()));
+				}
 				return Global::_ok;
 			}
 		}
@@ -583,7 +601,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 					return Global::_fault;
 			}
 		}
-		if (stringStack.size() != 1 || reverse.size() != 0)
+		if ((stringStack.size() != 0 && stringStack.size() != 1) || reverse.size() != 0)
 			return Global::_fault;
 		else
 		{
@@ -596,7 +614,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 			else
 			{
 				ret.type = Global::_boolean;
-				ret.data = any_t(new double(tOrF));
+				ret.data = any_t(new bool(tOrF));
 				return Global::_ok;
 			}
 		}
