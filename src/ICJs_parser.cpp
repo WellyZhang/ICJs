@@ -461,8 +461,19 @@ int _parse(vector<string> &input,
 				split(keylist, ",", keys);
 
 				for (vector<string>::iterator itt = keys.begin(); itt != keys.end(); itt++){
-					if (variables.find(*itt) == variables.end())
-						return Global::_fault;
+					if (itt->find("[") != string::npos){
+						int first = itt->find("[");
+						int last = itt->find("]");
+						key = itt->substr(0, first);
+						if (variables.find(key) == variables.end())
+							return Global::_fault;
+						if (variables[key].type != Global::_array)
+							return Global::_fault;
+					}
+					else{
+						if (variables.find(*itt) == variables.end())
+							return Global::_fault;
+					}
 				}
 				exp = it->substr(first + 1, end - first - 1);
 				int error = Calculator::calculate(exp, variables, ret, output);
@@ -472,8 +483,25 @@ int _parse(vector<string> &input,
 					return Global::_fault;
 
 				for (int i = 0; i < ret.size(); i++){
-					ret[i].key = keys[i];
-					variables[keys[i]] = ret[i];
+					if (keys[i].find("[") != string::npos){
+						int first = keys[i].find("[");
+						int last = keys[i].find("]");
+						key = keys[i].substr(0, first);
+						string subexp = keys[i].substr(first + 1, last - first - 1);
+						vector<Element> subret;
+						int error = Calculator::calculate(subexp, variables, subret, output);
+						if (error != Global::_ok)
+							return error;
+						if (subret.size() != 1)
+							return Global::_fault;
+						if (subret[i].type != Global::_number)
+							return Global::_fault;
+						(*((vector<Element>*)variables[key].data))[*(int*)subret[0].data] = ret[i];
+					}
+					else {
+						ret[i].key = keys[i];
+						variables[keys[i]] = ret[i];
+					}
 				}
 				it++;
 			}
