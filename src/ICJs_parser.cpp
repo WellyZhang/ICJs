@@ -100,7 +100,7 @@ vsit vector_find_next_case(vector<string> &lines, vsit line)
 int forloop(vsit &bg, vsit&ed,
 	map<std::string, Element> &variables,
 	vector<Element> &output,
-	Element &fun_ret,
+	vector<Element> &fun_ret,
 	string var,
 	string list)
 {
@@ -128,7 +128,7 @@ int Parser::parse(vector<string> &input,
 	map<std::string, Element> &variables,
 	vector<Element> &output)
 {
-	Element fun_ret;
+	vector<Element> fun_ret;
 	return _parse(input, variables, output, false, fun_ret);
 }
 
@@ -152,7 +152,7 @@ int _parse(vector<string> &input,
 	map<std::string, Element> &variables,
 	vector<Element> &output,
 	bool islocal,
-	Element &fun_ret)
+	vector<Element> &fun_ret)
 {
 	vsit it = input.begin();
 	vsit ed = input.end();
@@ -405,7 +405,7 @@ int _parse(vector<string> &input,
 			int error = Calculator::calculate(exp, variables, ret, output);
 			if (error != Global::_ok)
 				return error;
-			fun_ret = ret[0];
+			fun_ret = ret;
 			break;
 		}
 		else if (oper == "function"){
@@ -455,7 +455,7 @@ int _parse(vector<string> &input,
 int Parser::run_func(Function &func,
 	std::map<std::string, Element> &variables,
 	std::vector<Element> parameters,
-	Element &ret,
+	std::vector<Element> &ret,
 	std::vector<Element> &output)
 {
 	vector<Element> localVar;

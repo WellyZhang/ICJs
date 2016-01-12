@@ -21,7 +21,7 @@ class Parser
 		static int run_func(Function &func,
 			std::map<std::string, Element> &variables,
 			std::vector<Element> parameters,
-			Element &ret, 
+			std::vector<Element> &ret, 
 			std::vector<Element> &output);
 		~Parser();
 };
@@ -34,7 +34,7 @@ vsit vector_find_next_case(vector<string> &lines, vsit line);
 int forloop(vsit &bg, vsit&ed,
 	map<std::string, Element> &variables,
 	vector<Element> &output,
-	Element& fun_ret,
+	vector<Element>& fun_ret,
 	string var,
 	string list);
 
@@ -42,7 +42,7 @@ int _parse(std::vector<std::string> &input,
 	std::map<std::string, Element> &variables,
 	std::vector<Element> &output,
 	bool islocal,
-	Element &fun_ret);
+	vector<Element> &fun_ret);
 
 #endif ICJS_PARSER_H
 
