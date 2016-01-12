@@ -39,7 +39,6 @@ int main(int argc, char **argv)
 	vector<Element> output_;
 	vector<string> statements;
 
-
 	Element a;
 	a.key = "A";
 	a.type = Global::_number;
@@ -70,10 +69,12 @@ int main(int argc, char **argv)
 	func.data = any_t(&foo);
 	variables[func.key] = func;
 	
-	string t = "\"Hello   \" == D";
+	string t = "1 > 2";
 
-	int c = Calculator::RPNCalc(t, variables, ret);
-	cout << *(bool *)(ret.data) << endl;
+	int c = Calculator::calculate(t, variables, rets, output_);
+	cout << *(bool *)(rets[0].data) << endl;
+	//cout << *(double *)(rets[1].data) << endl;
+	//cout << *(double *)(rets[2].data) << endl;
 	
 	/*
 	int i = 0;

@@ -33,12 +33,16 @@ int Calculator::calculate(std::string &exp,
 		std::vector<std::string> aryElements;
 		std::vector<Element> tempRets;
 
-		if (rightBkt != exp.length() - 1 || rightBkt < leftBkt)
-			return Global::_fault;
-
 		if (!commaExp)
+		{
+			if (rightBkt != exp.length() - 1 || rightBkt < leftBkt)
+				return Global::_fault;
 			inArray = exp.substr(leftBkt + 1, rightBkt - leftBkt - 1);
-
+		}
+		else
+		{
+			inArray = exp;
+		}
 		Util::split(inArray, ",", &aryElements, false);
 		std::vector<std::string> fusedElements;
 		
@@ -99,7 +103,8 @@ int Calculator::calculate(std::string &exp,
 		}
 		else
 		{
-			rets.push_back((*elemArray)[0]);
+			for (int i = 0; i < (*elemArray).size(); i++)
+				rets.push_back((*elemArray)[i]);
 		}
 
 		return Global::_ok;
@@ -614,7 +619,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 			else
 			{
 				ret.type = Global::_boolean;
-				ret.data = any_t(new bool(tOrF));
+				ret.data = any_t(new bool(tOrF == 1.0));
 				return Global::_ok;
 			}
 		}

@@ -56,6 +56,13 @@ void Util::split(std::string& s, std::string delim, std::vector<std::string> *re
 		if (tempS != "")
 			ret->push_back(tempS);
 	}
+	else
+	{
+		for (int i = 0; i < temp.size(); i++)
+		{
+			ret->push_back(temp[i]);
+		}
+	}
 
 }
 
