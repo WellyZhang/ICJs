@@ -420,7 +420,10 @@ int _parse(vector<string> &input,
 			int error = Calculator::calculate(exp, variables, ret, output);
 			if (error != Global::_ok)
 				return error;
-			fun_ret = ret;
+			fun_ret.clear();
+			for (int i = 0; i < ret.size(); i++){
+				fun_ret.push_back(ret[i]);
+			}
 			break;
 		}
 		else if (oper == "function"){
