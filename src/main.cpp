@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	Element d;
 	d.key = "D";
 	d.type = Global::_string;
-	d.data = any_t(new string("Hello   "));
+	d.data = any_t(new string("Hello   World"));
 	variables[d.key] = d;
 	vector<string> funcBody;
 	funcBody.push_back("return 10;");
@@ -69,12 +69,43 @@ int main(int argc, char **argv)
 	func.data = any_t(&foo);
 	variables[func.key] = func;
 	
-	string t = "1 > 2";
+	string t = "[2 + 3, (1 + 4) == 5, [1, 2, 3, 4], D]";
 
 	int c = Calculator::calculate(t, variables, rets, output_);
-	cout << *(bool *)(rets[0].data) << endl;
-	//cout << *(double *)(rets[1].data) << endl;
-	//cout << *(double *)(rets[2].data) << endl;
+	for (int i = 0; i < rets.size(); i++)
+	{
+		switch (rets[i].type)
+		{
+		case Global::_number:
+			cout << *(double *)(rets[i].data) << endl;
+			break;
+		case Global::_boolean:
+			cout << *(bool *)(rets[i].data) << endl;
+			break;
+		case Global::_string:
+			cout << *(string *)(rets[i].data) << endl;
+			break;
+		case Global::_array:
+			vector<Element> arrayElem;
+			arrayElem = *(vector<Element> *)(rets[i].data);
+			for (int j = 0; j < arrayElem.size(); j++)
+			{
+				switch (arrayElem[j].type)
+				{
+				case Global::_number:
+					cout << *(double *)(arrayElem[j].data) << endl;
+					break;
+				case Global::_boolean:
+					cout << *(bool *)(arrayElem[j].data) << endl;
+					break;
+				case Global::_string:
+					cout << *(string *)(arrayElem[j].data) << endl;
+					break;
+				}
+			}
+			break;
+		}
+	}
 	
 	/*
 	int i = 0;

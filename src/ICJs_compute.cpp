@@ -6,6 +6,7 @@
 #include <cmath>
 #include <ctype.h>
 #include <sstream>
+#include <iostream>
 
 const int numericMode = Global::_number;
 const int stringMode = Global::_string;
@@ -25,7 +26,7 @@ int Calculator::calculate(std::string &exp,
 		
 	// Handle the array 
 	leftBkt = exp.find_first_of("[");
-	rightBkt = exp.find_first_of("]");
+	rightBkt = exp.find_last_of("]");
 	int commaExp = isComma(exp);
 	if ((leftBkt != std::string::npos && rightBkt != std::string::npos) || commaExp)
 	{
@@ -35,7 +36,7 @@ int Calculator::calculate(std::string &exp,
 
 		if (!commaExp)
 		{
-			if (rightBkt != exp.length() - 1 || rightBkt < leftBkt)
+			if (rightBkt < leftBkt)
 				return Global::_fault;
 			inArray = exp.substr(leftBkt + 1, rightBkt - leftBkt - 1);
 		}
@@ -44,6 +45,7 @@ int Calculator::calculate(std::string &exp,
 			inArray = exp;
 		}
 		Util::split(inArray, ",", &aryElements, false);
+		std::vector<std::string> arrayElements;
 		std::vector<std::string> fusedElements;
 		
 		// Note that "," might seperate the component of function into several parts
@@ -52,6 +54,9 @@ int Calculator::calculate(std::string &exp,
 		std::string toBeFused = "";
 		int numOfParenth = 0;
 		int localParenth = 0;
+		int numOfBracket = 0;
+		int localBracket = 0;
+		
 		for (int i = 0; i < aryElements.size(); i++)
 		{
 			localParenth = 0;
@@ -70,12 +75,42 @@ int Calculator::calculate(std::string &exp,
 			if (numOfParenth == 0)
 			{
 				if (localParenth == 0)
-				{		
-					fusedElements.push_back(aryElements[i]);
+				{
+					arrayElements.push_back(aryElements[i]);
 				}
 				if (localParenth < 0)
 				{
 					toBeFused += aryElements[i];
+					arrayElements.push_back(toBeFused);
+					toBeFused = "";
+				}
+			}
+		}
+
+		for (int i = 0; i < arrayElements.size(); i++)
+		{
+			localBracket = 0;
+			localBracket += Util::numOfChar(arrayElements[i], '[');
+			localBracket -= Util::numOfChar(arrayElements[i], ']');
+			numOfBracket += localBracket;
+			if (numOfBracket < 0)
+			{
+				return Global::_fault;
+			}
+			if (numOfBracket > 0)
+			{
+				toBeFused += arrayElements[i];
+				toBeFused += ", ";
+			}
+			if (numOfBracket == 0)
+			{
+				if (localBracket == 0)
+				{
+					fusedElements.push_back(arrayElements[i]);
+				}
+				if (localBracket < 0)
+				{
+					toBeFused += arrayElements[i];
 					fusedElements.push_back(toBeFused);
 					toBeFused = "";
 				}
@@ -86,7 +121,15 @@ int Calculator::calculate(std::string &exp,
 		for (int i = 0; i < fusedElements.size(); i++)
 		{
 			Element *elem = new Element;
-			numeric(fusedElements[i], variables, tempRets, output);
+			if (fusedElements[i].at(0) == '[' &&
+				fusedElements[i].at(fusedElements[i].length() - 1) == ']')
+			{
+				calculate(fusedElements[i], variables, tempRets, output);
+			}
+			else
+			{
+				numeric(fusedElements[i], variables, tempRets, output);
+			}
 			(*elem).type = tempRets[0].type;
 			(*elem).data = tempRets[0].data;
 			(*elemArray).push_back(*elem);
@@ -104,7 +147,9 @@ int Calculator::calculate(std::string &exp,
 		else
 		{
 			for (int i = 0; i < (*elemArray).size(); i++)
+			{
 				rets.push_back((*elemArray)[i]);
+			}
 		}
 
 		return Global::_ok;
