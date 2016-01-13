@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 	vector<Element> rets;
 	vector<Element> output_;
 	vector<string> statements;
-	
+
 	int i = 0;
 	while (true)
 	{
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 		cout << input << "[" << i << "]: ";
 		SetConsoleTextAttribute(outputHandler, FORBLACK);
 		rawInput = readIn(int(log10(i)));
-		if (rawInput.find("exit")!=string::npos)
+		if (rawInput.find("exit") != string::npos)
 		{
 			break;
 		}
@@ -58,20 +58,19 @@ int main(int argc, char **argv)
 			printCredits();
 			continue;
 		}
-		Util::split(rawInput, "\n", &statements, false);
-		//Calculator::calculate(rawInput, variables, ret, output_);
+		Util::split(rawInput, "\n", &statements, false); 
 
 		int error = Parser::parse(statements, variables, output_);
 
 		//result = writeOut(Util::trim(output_));
-		
-			SetConsoleTextAttribute(outputHandler, FORRED);
-			cout << output << "[" << i << "]: ";
-			SetConsoleTextAttribute(outputHandler, FORBLACK);
-			print(output_);
 
-			if (error != Global::_ok)
-				cout << "Error!" << endl;
+		SetConsoleTextAttribute(outputHandler, FORRED);
+		cout << output << "[" << i << "]: ";
+		SetConsoleTextAttribute(outputHandler, FORBLACK);
+		print(output_);
+
+		if (error != Global::_ok)
+			cout << "Error!" << endl;
 		statements.clear();
 		cout << endl;
 		cout << endl;

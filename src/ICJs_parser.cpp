@@ -257,11 +257,22 @@ int _parse(vector<string> &input,
 				it++;
 			}
 			else {
-				it = vector_find_else(input, it);
+				if (vector_find_else(input, it) < input.end())
+					it = vector_find_else(input, it) + 1;
+				else
+					it = input.end();
 			}
 		}
 		else if (oper == "else"){
-			it++;
+			istringstream is(*(it+1));
+			is >> oper;
+			clear_string(oper);
+			if (oper == "{"){
+				it = vector_find_bracket(input, it + 1);
+			}
+			else{
+				it = it + 2;
+			}
 		}
 		/*
 			for (var a : list)
@@ -412,7 +423,7 @@ int _parse(vector<string> &input,
 		}
 		else if (oper == "return"){
 			int first = it->find('n');
-			int last = it->rfind(';');
+			int last = end;
 			assert(first != string::npos);
 			assert(last != string::npos);
 			
