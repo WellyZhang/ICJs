@@ -193,8 +193,10 @@ int Calculator::calculate(std::string &exp,
 					exp.replace(leftBkt - arrayName.length(), rightBkt - leftBkt + arrayName.length() + 1, os.str());
 					break;
 				case Global::_array:
-					s = Util::arrayToString(*((std::vector<Element> *)(e.data)));
-					exp.replace(leftBkt - arrayName.length(), rightBkt - leftBkt + arrayName.length() + 1, s);
+					os << "[";
+					os << Util::arrayToString(*((std::vector<Element> *)(e.data)));
+					os << "]";
+					exp.replace(leftBkt - arrayName.length(), rightBkt - leftBkt + arrayName.length() + 1, os.str());
 					break;
 				}
 				return calculate(exp, variables, rets, output);
