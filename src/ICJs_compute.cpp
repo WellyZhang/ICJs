@@ -185,7 +185,9 @@ int Calculator::calculate(std::string &exp,
 				switch (e.type)
 				{
 				case Global::_string:
+					os << "\"";
 					os << *(std::string *)(e.data);
+					os << "\"";
 					exp.replace(leftBkt - arrayName.length(), rightBkt - leftBkt + arrayName.length() + 1, os.str());
 					break;
 				case Global::_number:
@@ -360,7 +362,7 @@ int Calculator::numeric(std::string &exp,
 
 int Calculator::isOperator(std::string input)
 {
-	if (input == "**" || input == "*" || input == "/" || input == "+" || input == "-" || input == "%" || 
+	if (input == "**" || input == "*" || input == "/" || input == "+" || input == "-" || input == "mod" || 
 		input == "and" || input == "or" || input == "not" || input == ">=" || input == "<=" ||
 		input == "==" || input == "!=" || input == ">" || input == "<")
 		return 1;
@@ -374,7 +376,7 @@ int Calculator::priority(std::string opt)
 		return 6;
 	if (opt == "not")
 		return 5;
-	if (opt == "*" || opt == "/" || opt == "%")
+	if (opt == "*" || opt == "/" || opt == "mod")
 		return 4;
 	if (opt == "+" || opt == "-")
 		return 3;
@@ -468,6 +470,8 @@ int Calculator::isLogic(std::vector<std::string> inputs)
 int Calculator::isComma(std::string input)
 {
 	int counter = 0;
+	if (input.empty())
+		return 0;
 	if (input.at(0) == '[' && input.at(input.length() - 1) == ']')
 		return 0;
 	for (int i = 0; i < input.length(); i++)
@@ -632,7 +636,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 						numericStack.push(op1 + op2);
 					if (temp == "-")
 						numericStack.push(op1 - op2);
-					if (temp == "%")
+					if (temp == "mod")
 						numericStack.push((int)op1 % (int)op2);
 					if (temp == "==")
 						numericStack.push((double)(op1 == op2));
