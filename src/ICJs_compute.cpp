@@ -40,8 +40,10 @@ int Calculator::calculate(std::string &exp,
 
 		for (int k = leftBkt - 1; k >= 0; k--)
 		{
-			if (exp.at(k) == ' ')
+			if (exp.at(k) == ' ' || k == 0)
 			{
+				if (k == 0)
+					k -= 1;
 				arrayName = exp.substr(k + 1, leftBkt - k - 1);
 				break;
 			}
@@ -54,6 +56,7 @@ int Calculator::calculate(std::string &exp,
 		{
 			if (rightBkt < leftBkt)
 				return Global::_fault;
+			//rightBkt = exp.find_first_of("]");
 			inArray = exp.substr(leftBkt + 1, rightBkt - leftBkt - 1);
 		}
 		else
@@ -137,15 +140,7 @@ int Calculator::calculate(std::string &exp,
 		for (int i = 0; i < fusedElements.size(); i++)
 		{
 			Element *elem = new Element;
-			if (fusedElements[i].at(0) == '[' &&
-				fusedElements[i].at(fusedElements[i].length() - 1) == ']')
-			{
-				calculate(fusedElements[i], variables, tempRets, output);
-			}
-			else
-			{
-				numeric(fusedElements[i], variables, tempRets, output);
-			}
+			calculate(fusedElements[i], variables, tempRets, output);
 			(*elem).type = tempRets[0].type;
 			(*elem).data = tempRets[0].data;
 			(*elemArray).push_back(*elem);
@@ -187,15 +182,15 @@ int Calculator::calculate(std::string &exp,
 				{
 				case Global::_string:
 					os << *(std::string *)(e.data);
-					exp.replace(leftBkt - arrayName.length(), rightBkt, os.str());
+					exp.replace(leftBkt - arrayName.length(), rightBkt - leftBkt + arrayName.length() + 1, os.str());
 					break;
 				case Global::_number:
 					os << *(double *)(e.data);
-					exp.replace(leftBkt - arrayName.length(), rightBkt, os.str());
+					exp.replace(leftBkt - arrayName.length(), rightBkt - leftBkt + arrayName.length() + 1, os.str());
 					break;
 				case Global::_array:
 					s = Util::arrayToString(*((std::vector<Element> *)(e.data)));
-					exp.replace(leftBkt - arrayName.length(), rightBkt, s);
+					exp.replace(leftBkt - arrayName.length(), rightBkt - leftBkt + arrayName.length() + 1, s);
 					break;
 				}
 				return calculate(exp, variables, rets, output);
@@ -306,8 +301,11 @@ int Calculator::numeric(std::string &exp,
 			Parser::run_func(*((Function *)(variables[funcName].data)), variables, tempRets, funcRets, output);
 			
 			std::ostringstream newOS;
-			switch (funcRets[0].type)
+			newOS << "";
+			if (!funcRets.empty())
 			{
+				switch (funcRets[0].type)
+				{
 				case Global::_boolean:
 					newOS << *(bool *)funcRets[0].data;
 					break;
@@ -319,8 +317,9 @@ int Calculator::numeric(std::string &exp,
 					newOS << *((std::string *)funcRets[0].data);
 					newOS << "\"";
 					break;
+				}
+				exp.replace(j + 1, end - j, newOS.str());
 			}
-			exp.replace(j + 1, end - j, newOS.str());
 		}
 		else
 		{
