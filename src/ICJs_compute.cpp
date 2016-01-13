@@ -138,10 +138,13 @@ int Calculator::calculate(std::string &exp,
 		}
 		
 		// Compute each component of an array
+		int flag;
 		for (int i = 0; i < fusedElements.size(); i++)
 		{
 			Element *elem = new Element;
-			calculate(fusedElements[i], variables, tempRets, output);
+			flag = calculate(fusedElements[i], variables, tempRets, output);
+			if (flag == Global::_fault)
+				return Global::_fault;
 			(*elem).type = tempRets[0].type;
 			(*elem).data = tempRets[0].data;
 			(*elemArray).push_back(*elem);
