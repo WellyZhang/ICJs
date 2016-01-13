@@ -31,9 +31,10 @@ void clear_string(string& str)
 void string_dblank(string& str)
 {
 	sit it = str.begin();
-	while ((it = find(it, str.end(), ' ')) != str.end()){
-		str.erase(it);
+	while (it!=str.end()){
+		if (*it == ' ' || *it == '\t') str.erase(it);
 		if (it == str.end()) break;
+		it++;
 	}
 }
 
