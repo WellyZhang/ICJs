@@ -32,9 +32,8 @@ void string_dblank(string& str)
 {
 	sit it = str.begin();
 	while (it!=str.end()){
-		if (*it == ' ' || *it == '\t') str.erase(it);
-		if (it == str.end()) break;
-		it++;
+		if (*it == ' ' || *it == '\t') it = str.erase(it);
+		else it++;
 	}
 }
 
@@ -522,6 +521,7 @@ int _parse(vector<string> &input,
 			}
 			else{
 				exp = it->substr(0, end);
+				string_dblank(exp);
 				int error = Calculator::calculate(exp, variables, ret, output);
 				if (error != Global::_ok)
 					return error;
