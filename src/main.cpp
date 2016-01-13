@@ -52,17 +52,12 @@ int main(int argc, char **argv)
 		cout << input << "[" << i << "]: ";
 		SetConsoleTextAttribute(outputHandler, FORBLACK);
 		rawInput = readIn(int(log10(i)));
-		
+
 		if (rawInput.find("exit") != string::npos)
 		{
 			break;
 		}
-		else if (rawInput == "credits")
-		{
-			printCredits();
-			continue;
-		}
-		Util::split(rawInput, "\n", &statements, false); 
+		Util::split(rawInput, "\n", &statements, false);
 		if (rawInput.find("%load") != string::npos){
 			statements.clear();
 			string oper, filename;
@@ -79,16 +74,23 @@ int main(int argc, char **argv)
 		int error = Parser::parse(statements, variables, output_);
 
 		//result = writeOut(Util::trim(output_));
+		if (rawInput == "credits" || !output_.empty() || error != Global::_ok){
+			SetConsoleTextAttribute(outputHandler, FORRED);
+			cout << output << "[" << i << "]: ";
+			SetConsoleTextAttribute(outputHandler, FORBLACK);
+			print(output_);
+			if (rawInput == "credits")
+			{
+				printCredits();
+				continue;
+			}
+			if (error != Global::_ok)
+				cout << "Error!";
+			cout << endl;
+		}
 
-		SetConsoleTextAttribute(outputHandler, FORRED);
-		cout << output << "[" << i << "]: ";
-		SetConsoleTextAttribute(outputHandler, FORBLACK);
-		print(output_);
-
-		if (error != Global::_ok)
-			cout << "Error!" << endl;
+		
 		statements.clear();
-		cout << endl;
 		cout << endl;
 	}
 	return 0;
@@ -178,7 +180,10 @@ void print(vector<Element> rets)
 				cout << ", ";
 			break;
 		case Global::_boolean:
-			cout << *(bool *)(rets[i].data);
+			if (*(bool *)(rets[i].data))
+				cout << "true";
+			else
+				cout << "false";
 			if (i != rets.size() - 1)
 				cout << ", ";
 			break;
