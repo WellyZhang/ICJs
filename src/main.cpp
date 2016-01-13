@@ -43,12 +43,13 @@ int main(int argc, char **argv)
 	int i = 0;
 	while (true)
 	{
+		output_.clear();
 		i++;
 		SetConsoleTextAttribute(outputHandler, FORGREEN);
 		cout << input << "[" << i << "]: ";
 		SetConsoleTextAttribute(outputHandler, FORBLACK);
 		rawInput = readIn(int(log10(i)));
-		if (rawInput == "exit")
+		if (rawInput.find("exit")!=string::npos)
 		{
 			break;
 		}
@@ -60,15 +61,19 @@ int main(int argc, char **argv)
 		Util::split(rawInput, "\n", &statements, false);
 		//Calculator::calculate(rawInput, variables, ret, output_);
 
-		result = writeOut(Util::trim(rawInput));
-		if (result != "")
-		{
+		int error = Parser::parse(statements, variables, output_);
+
+		//result = writeOut(Util::trim(output_));
+		
 			SetConsoleTextAttribute(outputHandler, FORRED);
 			cout << output << "[" << i << "]: ";
 			SetConsoleTextAttribute(outputHandler, FORBLACK);
-			cout << result << endl;
-		}
+			print(output_);
+
+			if (error != Global::_ok)
+				cout << "Error!" << endl;
 		statements.clear();
+		cout << endl;
 		cout << endl;
 	}
 	return 0;
@@ -163,7 +168,7 @@ void print(vector<Element> rets)
 				cout << ", ";
 			break;
 		case Global::_string:
-			cout << *(string *)(rets[i].data);
+			cout << "\"" <<*(string *)(rets[i].data) << "\"";
 			if (i != rets.size() - 1)
 				cout << ", ";
 			break;

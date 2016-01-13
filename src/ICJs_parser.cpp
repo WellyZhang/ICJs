@@ -173,7 +173,7 @@ int _parse(vector<string> &input,
 		ret.clear();
 		int end = it->find(';');
 		if (end == string::npos)
-			end = it->size() - 1;
+			end = it->size();
 
 		istringstream is(*it);
 		is >> oper;
@@ -306,7 +306,7 @@ int _parse(vector<string> &input,
 					var, list);
 				if (error != Global::_ok)
 					return error;
-
+				it = it + 2;
 			}
 		}
 		/*
