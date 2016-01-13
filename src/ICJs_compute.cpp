@@ -47,7 +47,7 @@ int Calculator::calculate(std::string &exp,
 			}
 		}
 
-		if (!isArrayVar(arrayName, variables))
+		if (!isArrayDef && !isArrayVar(arrayName, variables))
 			return Global::_fault;
 
 		if (!commaExp)
