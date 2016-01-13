@@ -513,9 +513,6 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 
 	int indicator;
 
-	if (ops.size() % 2 == 0)
-		return Global::_fault;
-
 	for (int i = 0; i < ops.size(); i++)
 	{
 		if (i % 2 == 0)
@@ -649,7 +646,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 						numericStack.push((double)(op1 < op2));
 					if (temp == "and")
 						numericStack.push((double)(op1 && op2));
-					if (temp == "||")
+					if (temp == "or")
 						numericStack.push((double)(op1 || op2));
 				}
 				else
