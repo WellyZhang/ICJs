@@ -56,7 +56,8 @@ int Calculator::calculate(std::string &exp,
 		{
 			if (rightBkt < leftBkt)
 				return Global::_fault;
-			//rightBkt = exp.find_first_of("]");
+			if (!isArrayDef)
+				rightBkt = exp.find_first_of("]");
 			inArray = exp.substr(leftBkt + 1, rightBkt - leftBkt - 1);
 		}
 		else
@@ -338,6 +339,11 @@ int Calculator::numeric(std::string &exp,
 	
 	for (int i = 0; i < commaSeps.size(); i++)
 	{
+		if (isArrayVar(commaSeps[i], variables))
+		{
+			rets.push_back(variables[commaSeps[i]]);
+			return Global::_ok;
+		}
 		flag = RPNCalc(commaSeps[i], variables, toCommaRet);
 		if (flag == Global::_fault)
 			return Global::_fault;
