@@ -7,11 +7,13 @@
 #include <map> 
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include "ICJs_compute.h"
 #include "ICJs_types.h"
 #include "ICJs_util.h"
 #include "ICJs_parser.h"
-#include <sstream>
+
 
 #define FORGREEN (FOREGROUND_GREEN | FOREGROUND_INTENSITY)
 #define FORBLACK (FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED)
@@ -31,6 +33,7 @@ int main(int argc, char **argv)
 {
 
 	printHeader();
+	char buf[256];
 	string input = "In ", output = "Out";
 	string rawInput = "";
 	string result = "nil";
@@ -49,16 +52,29 @@ int main(int argc, char **argv)
 		cout << input << "[" << i << "]: ";
 		SetConsoleTextAttribute(outputHandler, FORBLACK);
 		rawInput = readIn(int(log10(i)));
+		
 		if (rawInput.find("exit") != string::npos)
 		{
 			break;
 		}
-		if (rawInput == "credits")
+		else if (rawInput == "credits")
 		{
 			printCredits();
 			continue;
 		}
 		Util::split(rawInput, "\n", &statements, false); 
+		if (rawInput.find("%load") != string::npos){
+			statements.clear();
+			string oper, filename;
+			istringstream is(rawInput);
+			is >> oper >> filename;
+			ifstream file;
+			file.open(filename);
+			while (file.getline(buf, 256)){
+				statements.push_back(string(buf));
+			}
+			file.close();
+		}
 
 		int error = Parser::parse(statements, variables, output_);
 
