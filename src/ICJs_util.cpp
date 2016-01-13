@@ -2,6 +2,7 @@
 #include "ICJs_compute.h"
 #include <string>
 #include <vector>
+#include <sstream>
 
 void Util::split(std::string& s, std::string delim, std::vector<std::string> *ret, bool preserveBlank)
 {
@@ -77,7 +78,70 @@ std::string &Util::trim(std::string &s)
 	return s;
 }
 
+int Util::numOfChar(std::string &s, char c)
+{
+	int counter = 0;
+	for (int i = 0; i < s.length(); i++)
+	{
+		if (s.at(i) == c)
+		{
+			counter++;
+		}
+	}
+	return counter;
+}
+
+std::string Util::arrayToString(std::vector<Element> ary)
+{
+	std::ostringstream os;
+	for (int i = 0; i < ary.size(); i++)
+	{
+		switch (ary[i].type)
+		{
+		case Global::_number:
+			os << *(double *)(ary[i].data);
+			if (i != ary.size() - 1)
+				os << ", ";
+			break;
+		case Global::_boolean:
+			os << *(bool *)(ary[i].data);
+			if (i != ary.size() - 1)
+				os << ", ";
+			break;
+		case Global::_string:
+			os << *(string *)(ary[i].data);
+			if (i != ary.size() - 1)
+				os << ", ";
+			break;
+		case Global::_array:
+			os << "[";
+			os << arrayToString(*(vector<Element> *)ary[i].data);
+			os << "]";
+			if (i != ary.size() - 1)
+				os << ", ";
+			break;
+		}
+	}
+	return os.str();
+}
+
 /*
+void Util::numBlankPos(std::string &s, std::vector<int> pos)
+{
+	int length;
+	int start;
+	int end;
+	bool isIn = false;
+	for (int i = 0; i < s.length(); i++)
+	{
+		if (s.at(i) == '"')
+		{
+			isIn = ~isIn;
+		}
+		if (s.at(i) == ' ' && isIn
+	}
+}
+
 void Util::rmBlankInParenth(std::string &s)
 {
 	size_t start = s.find_first_of("(");
@@ -119,37 +183,6 @@ void Util::rmBlankInParenth(std::string &s)
 			s.replace(blankStart, blankLength, "");
 			i -= blankLength;
 		}
-	}
-}
-*/
-
-int Util::numOfChar(std::string &s, char c)
-{
-	int counter = 0;
-	for (int i = 0; i < s.length(); i++)
-	{
-		if (s.at(i) == c)
-		{
-			counter++;
-		}
-	}
-	return counter;
-}
-
-/*
-void Util::numBlankPos(std::string &s, std::vector<int> pos)
-{
-	int length;
-	int start;
-	int end;
-	bool isIn = false;
-	for (int i = 0; i < s.length(); i++)
-	{
-		if (s.at(i) == '"')
-		{
-			isIn = ~isIn;
-		}
-		if (s.at(i) == ' ' && isIn
 	}
 }
 */

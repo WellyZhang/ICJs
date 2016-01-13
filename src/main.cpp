@@ -23,6 +23,7 @@ void printHeader(void);
 void printCredits(void);
 string readIn(int i);
 string writeOut(string in);
+void print(vector<Element> out);
 
 HANDLE outputHandler = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -38,76 +39,7 @@ int main(int argc, char **argv)
 	vector<Element> rets;
 	vector<Element> output_;
 	vector<string> statements;
-
-	Element a;
-	a.key = "A";
-	a.type = Global::_number;
-	a.data = any_t(new double(5));
-	variables[a.key] = a;
-	Element b;
-	b.key = "B";
-	b.type = Global::_number;
-	b.data = any_t(new double(2.5));
-	variables[b.key] = b;
-	Element d;
-	d.key = "D";
-	d.type = Global::_string;
-	d.data = any_t(new string("Hello   World"));
-	variables[d.key] = d;
-	vector<string> funcBody;
-	funcBody.push_back("return 10;");
-	vector<string> paramNames;
-	paramNames.push_back("A");
-	paramNames.push_back("B");
-	Function foo;
-	foo.key = "foo";
-	foo.body = funcBody;
-	foo.param_names = paramNames;
-	Element func;
-	func.key = foo.key;
-	func.type = Global::_function;
-	func.data = any_t(&foo);
-	variables[func.key] = func;
 	
-	string t = "[2 + 3, (1 + 4) == 5, [1, 2, 3, 4], D]";
-
-	int c = Calculator::calculate(t, variables, rets, output_);
-	for (int i = 0; i < rets.size(); i++)
-	{
-		switch (rets[i].type)
-		{
-		case Global::_number:
-			cout << *(double *)(rets[i].data) << endl;
-			break;
-		case Global::_boolean:
-			cout << *(bool *)(rets[i].data) << endl;
-			break;
-		case Global::_string:
-			cout << *(string *)(rets[i].data) << endl;
-			break;
-		case Global::_array:
-			vector<Element> arrayElem;
-			arrayElem = *(vector<Element> *)(rets[i].data);
-			for (int j = 0; j < arrayElem.size(); j++)
-			{
-				switch (arrayElem[j].type)
-				{
-				case Global::_number:
-					cout << *(double *)(arrayElem[j].data) << endl;
-					break;
-				case Global::_boolean:
-					cout << *(bool *)(arrayElem[j].data) << endl;
-					break;
-				case Global::_string:
-					cout << *(string *)(arrayElem[j].data) << endl;
-					break;
-				}
-			}
-			break;
-		}
-	}
-	
-	/*
 	int i = 0;
 	while (true)
 	{
@@ -115,40 +47,30 @@ int main(int argc, char **argv)
 		SetConsoleTextAttribute(outputHandler, FORGREEN);
 		cout << input << "[" << i << "]: ";
 		SetConsoleTextAttribute(outputHandler, FORBLACK);
-		rawInput = readIn(log10(i));
+		rawInput = readIn(int(log10(i)));
 		if (rawInput == "exit")
 		{
 			break;
 		}
-		Util::split(rawInput, "\n", &statements);
-		//Calculator::calculate(rawInput, variables, ret, output_);
-		
-		
-		for (int i = 0; i < statements.size(); i++)
+		if (rawInput == "credits")
 		{
-			cout << statements[i] << endl;
+			printCredits();
+			continue;
 		}
-		
-		
-		result = writeOut(trim(rawInput));
+		Util::split(rawInput, "\n", &statements, false);
+		//Calculator::calculate(rawInput, variables, ret, output_);
+
+		result = writeOut(Util::trim(rawInput));
 		if (result != "")
 		{
 			SetConsoleTextAttribute(outputHandler, FORRED);
 			cout << output << "[" << i << "]: ";
 			SetConsoleTextAttribute(outputHandler, FORBLACK);
-			if (result == "credits")
-			{
-				printCredits();
-			}
-			else
-			{
-				cout << result << endl;
-			}
+			cout << result << endl;
 		}
+		statements.clear();
 		cout << endl;
 	}
-	*/
-	system("pause");
 	return 0;
 }
 
@@ -171,8 +93,9 @@ void printHeader(void)
 void printCredits(void)
 {
 	cout << "We are grateful for users of CNBlog, CPlusPlus website developers, Googlers who share publicly their ideas about C++ ";
-	cout << "and anybody who has ever lent a helping hand when we are developing this interactive interpreter without whom the ";
+	cout << "and anybody who has ever lent a helping hand when we are developing this interactive interpreter, without whom the ";
 	cout << "project might take way longer to finish than expected." << endl;
+	cout << endl;
 	return;
 }
 
@@ -223,3 +146,34 @@ string writeOut(string in)
 	return out;
 }
 
+void print(vector<Element> rets)
+{
+	for (int i = 0; i < rets.size(); i++)
+	{
+		switch (rets[i].type)
+		{
+		case Global::_number:
+			cout << *(double *)(rets[i].data);
+			if (i != rets.size() - 1)
+				cout << ", ";
+			break;
+		case Global::_boolean:
+			cout << *(bool *)(rets[i].data);
+			if (i != rets.size() - 1)
+				cout << ", ";
+			break;
+		case Global::_string:
+			cout << *(string *)(rets[i].data);
+			if (i != rets.size() - 1)
+				cout << ", ";
+			break;
+		case Global::_array:
+			cout << "[";
+			print(*(vector<Element> *)rets[i].data);
+			cout << "]";
+			if (i != rets.size() - 1)
+				cout << ", ";
+			break;
+		}
+	}
+}

@@ -27,6 +27,8 @@ class Calculator
 		static int isLogic(std::vector<std::string> inputs);
 		static int isComma(std::string input);
 		static int isLogicOperator(std::string input);
+		static int isArrayVar(std::string input, std::map<std::string, Element> &variables);
+
 };
 
 #endif ICJS_COMPUTE_H

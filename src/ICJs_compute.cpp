@@ -28,11 +28,27 @@ int Calculator::calculate(std::string &exp,
 	leftBkt = exp.find_first_of("[");
 	rightBkt = exp.find_last_of("]");
 	int commaExp = isComma(exp);
+	int isArrayDef = 1;
+	std::string arrayName;
 	if ((leftBkt != std::string::npos && rightBkt != std::string::npos) || commaExp)
 	{
 		std::string inArray;
 		std::vector<std::string> aryElements;
 		std::vector<Element> tempRets;
+
+		isArrayDef = (leftBkt == 0);
+
+		for (int k = leftBkt - 1; k >= 0; k--)
+		{
+			if (exp.at(k) == ' ')
+			{
+				arrayName = exp.substr(k + 1, leftBkt - k - 1);
+				break;
+			}
+		}
+
+		if (!isArrayVar(arrayName, variables))
+			return Global::_fault;
 
 		if (!commaExp)
 		{
@@ -137,22 +153,55 @@ int Calculator::calculate(std::string &exp,
 		}
 
 		// Note that each component in the array after computation is "newed"
-		if (!commaExp)
+		if (isArrayDef)
 		{
-			Element *toRet = new Element;
-			(*toRet).type = Global::_array;
-			(*toRet).data = any_t(elemArray);
-			rets.push_back(*toRet);
+			if (!commaExp)
+			{
+				Element *toRet = new Element;
+				(*toRet).type = Global::_array;
+				(*toRet).data = any_t(elemArray);
+				rets.push_back(*toRet);
+			}
+			else
+			{
+				for (int i = 0; i < (*elemArray).size(); i++)
+				{
+					rets.push_back((*elemArray)[i]);
+				}
+			}
+			return Global::_ok;
 		}
 		else
 		{
-			for (int i = 0; i < (*elemArray).size(); i++)
+			if ((*elemArray).size() != 1 ||
+				(*elemArray)[0].type != Global::_number)
+				return Global::_fault;
+			double index = *(double *)((*elemArray)[0].data);
+			if (index == (int)index)
 			{
-				rets.push_back((*elemArray)[i]);
+				std::ostringstream os;
+				std::string s;
+				Element e;
+				e = (*((std::vector<Element> *)(variables[arrayName].data)))[int(index)];
+				switch (e.type)
+				{
+				case Global::_string:
+					os << *(std::string *)(e.data);
+					exp.replace(leftBkt - arrayName.length(), rightBkt, os.str());
+					break;
+				case Global::_number:
+					os << *(double *)(e.data);
+					exp.replace(leftBkt - arrayName.length(), rightBkt, os.str());
+					break;
+				case Global::_array:
+					s = Util::arrayToString(*((std::vector<Element> *)(e.data)));
+					exp.replace(leftBkt - arrayName.length(), rightBkt, s);
+					break;
+				}
+				return calculate(exp, variables, rets, output);
 			}
+			else return Global::_fault;
 		}
-
-		return Global::_ok;
 	}
 	else if ((leftBkt == std::string::npos && rightBkt != std::string::npos )|| 
 		(leftBkt != std::string::npos && rightBkt == std::string::npos))
@@ -247,6 +296,7 @@ int Calculator::numeric(std::string &exp,
 				if (exp.at(j) == ' ')
 					break;
 			}
+
 
 			funcName = exp.substr(j + 1, start - j - 1);
 			flag = isFunction(funcName, variables);
@@ -372,6 +422,18 @@ int Calculator::isStringVar(std::string input, std::map<std::string, Element> &v
 	else
 	{
 		if (input.at(0) == '"' && input.at(input.length() - 1) == '"')
+			return 1;
+	}
+	return 0;
+}
+
+int Calculator::isArrayVar(std::string input, std::map<std::string, Element> &variables)
+{
+	std::map<std::string, Element>::iterator it;
+	it = variables.find(input);
+	if (it != variables.end())
+	{
+		if (it->second.type == Global::_array)
 			return 1;
 	}
 	return 0;
