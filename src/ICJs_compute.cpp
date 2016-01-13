@@ -152,7 +152,7 @@ int Calculator::calculate(std::string &exp,
 		}
 
 		// Note that each component in the array after computation is "newed"
-		if (isArrayDef)
+		if (isArrayDef || commaExp)
 		{
 			if (!commaExp)
 			{
