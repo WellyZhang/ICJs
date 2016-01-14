@@ -522,6 +522,8 @@ int _parse(vector<string> &input,
 			else{
 				exp = it->substr(0, end);
 				string::iterator itt = exp.begin();
+				if (exp == "")
+					return Global::_ok;
 				while (*itt == '\t' || *itt == ' '){
 					itt = exp.erase(itt);
 				}
