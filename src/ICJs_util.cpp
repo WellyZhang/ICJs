@@ -8,20 +8,51 @@ void Util::split(std::string& s, std::string delim, std::vector<std::string> *re
 {
 	size_t last = 0;
 	size_t index = s.find_first_of(delim, last);
-	std::vector<std::string> temp;
+	std::vector<std::string> temp1, temp;
 	std::string tempS = "";
 
 	while (index != std::string::npos)
 	{
-		temp.push_back(trim(s.substr(last, index - last)));
+		temp1.push_back(s.substr(last, index - last));
 		last = index + 1;
 		index = s.find_first_of(delim, last);
 	}
 	if (index - last > 0)
 	{
-		temp.push_back(trim(s.substr(last, index - last)));
+		temp1.push_back(s.substr(last, index - last));
 	}
 	
+	std::string toBeFused = "";
+	size_t quoteIdx;
+	int numOfQuote = 0;
+
+	bool isSep = false;
+
+	for (int i = 0; i < temp1.size(); i++)
+	{
+		numOfQuote = Util::numOfChar(temp1[i], '\"');
+		if (numOfQuote % 2 == 0 && isSep)
+		{
+			toBeFused += delim;
+			toBeFused += temp1[i];
+		}
+		else if (numOfQuote % 2 == 0 && !isSep)
+			temp.push_back(temp1[i]);
+		else if (numOfQuote % 2 != 0 && isSep)
+		{
+			toBeFused += delim;
+			toBeFused += temp1[i];
+			temp.push_back(toBeFused);
+			toBeFused = "";
+			isSep = false;
+		}
+		else
+		{
+			isSep = true;
+			toBeFused += temp1[i];
+		}
+	}
+
 	if (preserveBlank)
 	{
 		int blankFound = 0;

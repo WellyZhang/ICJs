@@ -515,8 +515,12 @@ int Calculator::isArrayVar(std::string input, std::map<std::string, Element> &va
 	return 0;
 }
 
-int Calculator::isLogic(std::vector<std::string> inputs)
+int Calculator::isLogic(std::vector<std::string> inputs, std::map<std::string, Element> vars)
 {
+	std::map<std::string, Element>::iterator it;
+	it = vars.find(inputs[0]);
+	if ((it != vars.end()) && it->second.type == Global::_boolean)
+		return 1;
 	for (int i = 0; i < inputs.size(); i++)
 	{
 		
@@ -591,7 +595,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 		mode = stringMode;
 	}
 
-	int log = isLogic(ops);
+	int log = isLogic(ops, variables);
 
 	int indicator;
 
@@ -610,7 +614,10 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 				{
 					std::map<std::string, Element>::iterator it;
 					it = variables.find(ops[i]);
-					num = *(double *)it->second.data;
+					if (!log)
+						num = *(double *)it->second.data;
+					else
+						num = (double)(*(bool *)(it->second.data));
 					std::ostringstream os;
 					os << num;
 					expStack.push(os.str());
@@ -798,8 +805,16 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 				}
 				else
 				{
-					ret.type = Global::_number;
-					ret.data = any_t(new double(numericStack.top()));
+					if (reverse.size() == 0)
+					{
+						ret.type = Global::_boolean;
+						ret.data = any_t(new bool(numericStack.top() != 0));
+					}
+					else
+					{
+						ret.type = Global::_number;
+						ret.data = any_t(new double(numericStack.top()));
+					}
 				}
 				return Global::_ok;
 			}
