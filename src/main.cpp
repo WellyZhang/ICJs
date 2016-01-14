@@ -25,7 +25,7 @@ void printHeader(void);
 void printCredits(void);
 string readIn(int i);
 string writeOut(string in);
-void print(vector<Element> out);
+void print(vector<Element> out, bool isrecursion);
 
 HANDLE outputHandler = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 			SetConsoleTextAttribute(outputHandler, FORRED);
 			cout << output << "[" << i << "]: ";
 			SetConsoleTextAttribute(outputHandler, FORBLACK);
-			print(output_);
+			print(output_, false);
 			if (rawInput == "credits")
 			{
 				printCredits();
@@ -168,7 +168,7 @@ string writeOut(string in)
 	return out;
 }
 
-void print(vector<Element> rets)
+void print(vector<Element> rets, bool isrecursion)
 {
 	for (int i = 0; i < rets.size(); i++)
 	{
@@ -176,7 +176,7 @@ void print(vector<Element> rets)
 		{
 		case Global::_number:
 			cout << *(double *)(rets[i].data);
-			if (i != rets.size() - 1)
+			if (isrecursion && i != rets.size() - 1)
 				cout << ", ";
 			break;
 		case Global::_boolean:
@@ -184,21 +184,23 @@ void print(vector<Element> rets)
 				cout << "true";
 			else
 				cout << "false";
-			if (i != rets.size() - 1)
+			if (isrecursion && i != rets.size() - 1)
 				cout << ", ";
 			break;
 		case Global::_string:
 			cout << "\"" <<*(string *)(rets[i].data) << "\"";
-			if (i != rets.size() - 1)
+			if (isrecursion && i != rets.size() - 1)
 				cout << ", ";
 			break;
 		case Global::_array:
 			cout << "[";
-			print(*(vector<Element> *)rets[i].data);
+			print(*(vector<Element> *)rets[i].data, true);
 			cout << "]";
-			if (i != rets.size() - 1)
+			if (isrecursion && i != rets.size() - 1)
 				cout << ", ";
 			break;
 		}
+		if (!isrecursion)
+			cout << endl;
 	}
 }
