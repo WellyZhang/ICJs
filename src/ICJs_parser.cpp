@@ -521,7 +521,10 @@ int _parse(vector<string> &input,
 			}
 			else{
 				exp = it->substr(0, end);
-				string_dblank(exp);
+				string::iterator it = exp.begin();
+				while (*it == '\t' || *it == ' '){
+					it = exp.erase(it);
+				}
 				int error = Calculator::calculate(exp, variables, ret, output);
 				if (error != Global::_ok)
 					return error;
