@@ -3,6 +3,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 
 using namespace std;
 
@@ -339,7 +340,7 @@ int _parse(vector<string> &input,
 			assert(first != string::npos);
 			assert(last != string::npos);
 
-			switch_exp = it->substr(first, last - first +1);
+			switch_exp = it->substr(first + 1, last - first - 1);
 			ed = vector_find_bracket(input, it + 1);
 			it += 2;
 		}
@@ -348,7 +349,7 @@ int _parse(vector<string> &input,
 			int last = it->rfind(':');
 			string value = it->substr(first + 1, last - first - 1);
 			string_dblank(value);
-			exp = switch_exp + " " + "==" + " " + "(" + value + ")";
+			exp = switch_exp + " " + "==" + " " +  value ;
 			int error = Calculator::calculate(exp, variables, ret, output);
 			assert(ret[0].type == Global::_boolean);
 
@@ -510,7 +511,7 @@ int _parse(vector<string> &input,
 							return Global::_fault;
 						if (subret[i].type != Global::_number)
 							return Global::_fault;
-						(*((vector<Element>*)variables[key].data))[*(int*)subret[0].data] = ret[i];
+						(*((vector<Element>*)variables[key].data))[(int)(*(double*)subret[0].data)] = ret[i];
 					}
 					else {
 						ret[i].key = keys[i];

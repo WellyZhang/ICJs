@@ -616,8 +616,14 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 					it = variables.find(ops[i]);
 					if (!log)
 						num = *(double *)it->second.data;
-					else
-						num = (double)(*(bool *)(it->second.data));
+					else{
+						if (it->second.type == Global::_boolean){
+							num = (double)(*(bool *)(it->second.data));
+						}
+						else
+							num = (double)(*(double *)(it->second.data));
+					
+					}
 					std::ostringstream os;
 					os << num;
 					expStack.push(os.str());
