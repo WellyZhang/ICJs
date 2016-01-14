@@ -11,9 +11,6 @@
 const int numericMode = Global::_number;
 const int stringMode = Global::_string;
 
-// TODO
-// All output variables are left unhandled
-
 int Calculator::calculate(std::string &exp,
 	std::map<std::string, Element> &variables,
 	std::vector<Element> &rets,
@@ -27,7 +24,9 @@ int Calculator::calculate(std::string &exp,
 	// Handle the array 
 	leftBkt = exp.find_first_of("[");
 	rightBkt = exp.find_last_of("]");
-	int commaExp = isComma(exp);
+	int commaExp = 0;
+	if (!isStringVar(exp, variables))
+		commaExp = isComma(exp);
 	int isArrayDef = 1;
 	std::string arrayName;
 	if ((leftBkt != std::string::npos && rightBkt != std::string::npos) || commaExp)
@@ -339,11 +338,44 @@ int Calculator::numeric(std::string &exp,
 	// and replaced by their actual value in the string expressions
 	// And this code snippet is responsible for the final evaluation of the string
 	std::vector<std::string> commaSeps;
+	std::vector<std::string> tempSeps;
+
 	Element toCommaRet;
 	int flag;
 	
-	Util::split(exp, ",", &commaSeps, false);
+	Util::split(exp, ",", &tempSeps, false);
+
+	std::string toBeFused = "";
+	size_t quoteIdx;
+	int numOfQuote = 0;
+
+	bool isSep = false;
 	
+	for (int i = 0; i < tempSeps.size(); i++)
+	{
+		numOfQuote = Util::numOfChar(tempSeps[i], '\"');
+		if (numOfQuote % 2 == 0 && isSep)
+		{
+			toBeFused += tempSeps[i];
+			toBeFused += ",";
+		}
+		else if (numOfQuote % 2 == 0 && !isSep)
+			commaSeps.push_back(tempSeps[i]);
+		else if (numOfQuote % 2 != 0 && isSep)
+		{
+			toBeFused += ",";
+			toBeFused += tempSeps[i];
+			commaSeps.push_back(toBeFused);
+			toBeFused = "";
+			isSep = false;
+		}
+		else
+		{
+			isSep = true;
+			toBeFused += tempSeps[i];
+		}
+	}
+
 	for (int i = 0; i < commaSeps.size(); i++)
 	{
 		if (isArrayVar(commaSeps[i], variables))
@@ -433,7 +465,10 @@ int Calculator::isStringVar(std::string input, std::map<std::string, Element> &v
 	}
 	else
 	{
-		if (input.at(0) == '"' && input.at(input.length() - 1) == '"')
+		int start, end;
+		start = input.find_first_of("\"", 0);
+		end = input.find_first_of("\"", start + 1);
+		if (start == 0 && end == input.length() - 1)
 			return 1;
 	}
 	return 0;
@@ -469,7 +504,9 @@ int Calculator::isLogic(std::vector<std::string> inputs)
 
 int Calculator::isComma(std::string input)
 {
-	int counter = 0;
+	int counterP = 0;
+	int counterQ = 0;
+	
 	if (input.empty())
 		return 0;
 	if (input.at(0) == '[' && input.at(input.length() - 1) == ']')
@@ -477,10 +514,12 @@ int Calculator::isComma(std::string input)
 	for (int i = 0; i < input.length(); i++)
 	{
 		if (input.at(i) == '(')
-			counter++;
+			counterP++;
+		if (input.at(i) == '\"')
+			counterQ++;
 		if (input.at(i) == ')')
-			counter--;
-		if (counter == 0 && input.at(i) == ',')
+			counterP--;
+		if (counterP == 0 && (counterQ % 2 == 0) && input.at(i) == ',')
 			return 1;
 	}
 	return 0;
@@ -499,7 +538,6 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 {
 	Util::trim(input);
 	std::vector<std::string> ops;
-	Util::split(input, " ", &ops, true);
 	std::stack<std::string> optStack;
 	std::stack<std::string> expStack;
 	std::stack<std::string> reverse;
@@ -510,12 +548,21 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 	std::string s;
 	int mode = numericMode;
 
-	int log = isLogic(ops);
-	
+	if (!isStringVar(input, variables))
+	{
+		Util::split(input, " ", &ops, true);
+	}
+	else
+	{
+		ops.push_back(input);
+	}
+
 	if (isStringVar(ops[0], variables))
 	{
 		mode = stringMode;
 	}
+
+	int log = isLogic(ops);
 
 	int indicator;
 
@@ -543,6 +590,45 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 					expStack.push("1");
 				else if (ops[i] == "false")
 					expStack.push("0");
+				else if (ops[i] == "not")
+				{
+					i++;
+					indicator = isNumVar(ops[i], variables);
+					if (indicator == 1)
+					{
+						expStack.push(ops[i]);
+					}
+					else if (indicator == 2)
+					{
+						std::map<std::string, Element>::iterator it;
+						it = variables.find(ops[i]);
+						num = *(double *)it->second.data;
+						std::ostringstream os;
+						os << num;
+						expStack.push(os.str());
+					}
+					else if (ops[i] == "true")
+						expStack.push("1");
+					else if (ops[i] == "false")
+						expStack.push("0");
+					if (mode == stringMode && ops[i] != "+" && ops[i] != "==" && ops[i] != "!=")
+						return Global::_fault;
+					while (optStack.size() != 0)
+					{
+						std::string tmp = optStack.top();
+						if (priority("not") > priority(tmp))
+						{
+							break;
+						}
+						else
+						{
+							optStack.pop();
+							expStack.push(tmp);
+						}
+					}
+					optStack.push("not");
+				}
+					
 				else 
 					return Global::_fault;
 			}
