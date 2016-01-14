@@ -65,6 +65,7 @@ int Calculator::calculate(std::string &exp,
 		}
 		Util::split(inArray, ",", &aryElements, false);
 		std::vector<std::string> arrayElements;
+		std::vector<std::string> quoteElements;
 		std::vector<std::string> fusedElements;
 		
 		// Note that "," might seperate the component of function into several parts
@@ -75,7 +76,8 @@ int Calculator::calculate(std::string &exp,
 		int localParenth = 0;
 		int numOfBracket = 0;
 		int localBracket = 0;
-		
+		int numOfQuote = 0;
+
 		for (int i = 0; i < aryElements.size(); i++)
 		{
 			localParenth = 0;
@@ -125,14 +127,41 @@ int Calculator::calculate(std::string &exp,
 			{
 				if (localBracket == 0)
 				{
-					fusedElements.push_back(arrayElements[i]);
+					quoteElements.push_back(arrayElements[i]);
 				}
 				if (localBracket < 0)
 				{
 					toBeFused += arrayElements[i];
-					fusedElements.push_back(toBeFused);
+					quoteElements.push_back(toBeFused);
 					toBeFused = "";
 				}
+			}
+		}
+
+		isSep = false;
+
+		for (int i = 0; i < quoteElements.size(); i++)
+		{
+			numOfQuote = Util::numOfChar(quoteElements[i], '\"');
+			if (numOfQuote % 2 == 0 && isSep)
+			{
+				toBeFused += quoteElements[i];
+				toBeFused += ",";
+			}
+			else if (numOfQuote % 2 == 0 && !isSep)
+				fusedElements.push_back(quoteElements[i]);
+			else if (numOfQuote % 2 != 0 && isSep)
+			{
+				toBeFused += ",";
+				toBeFused += quoteElements[i];
+				fusedElements.push_back(toBeFused);
+				toBeFused = "";
+				isSep = false;
+			}
+			else
+			{
+				isSep = true;
+				toBeFused += quoteElements[i];
 			}
 		}
 		
