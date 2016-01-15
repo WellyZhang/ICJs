@@ -11,6 +11,12 @@
 const int numericMode = Global::_number;
 const int stringMode = Global::_string;
 
+/*
+ * calculate函数
+ * 输入表达式，变量，返回值及输出
+ * 此函数处理数组，逗号表达式并将具体所需的计算传入一下层numeric函数
+ */
+
 int Calculator::calculate(std::string &exp,
 	std::map<std::string, Element> &variables,
 	std::vector<Element> &rets,
@@ -21,7 +27,8 @@ int Calculator::calculate(std::string &exp,
 	size_t rightBkt;
 	std::vector<Element> *elemArray = new std::vector<Element>;
 		
-	// Handle the array 
+	// 处理数组并获取数组[]内的逗号表达式
+	// 当做逗号表达式一起处理
 	leftBkt = exp.find_first_of("[");
 	rightBkt = exp.find_last_of("]");
 	int commaExp = 0;
@@ -68,8 +75,8 @@ int Calculator::calculate(std::string &exp,
 		std::vector<std::string> quoteElements;
 		std::vector<std::string> fusedElements;
 		
-		// Note that "," might seperate the component of function into several parts
-		// and the following code snippet fixes thie problem
+		// 由于采用了“，”和“ ”作为分割，可能将字符串内的字符分离
+		// 因此在此处需要将它们重新联合起来
 		bool isSep = false;
 		std::string toBeFused = "";
 		int numOfParenth = 0;
@@ -165,7 +172,7 @@ int Calculator::calculate(std::string &exp,
 			}
 		}
 		
-		// Compute each component of an array
+		// 计算每个逗号表达式成分
 		int flag;
 		for (int i = 0; i < fusedElements.size(); i++)
 		{
@@ -179,7 +186,7 @@ int Calculator::calculate(std::string &exp,
 			tempRets.clear();
 		}
 
-		// Note that each component in the array after computation is "newed"
+		// 每个返回值必须是new出来的
 		if (isArrayDef || commaExp)
 		{
 			if (!commaExp)
@@ -200,6 +207,8 @@ int Calculator::calculate(std::string &exp,
 		}
 		else
 		{
+			// 若是一个数组调用，如a[2]
+			// 需要采用特殊方法处理
 			if ((*elemArray).size() != 1 ||
 				(*elemArray)[0].type != Global::_number)
 				return Global::_fault;
@@ -239,10 +248,18 @@ int Calculator::calculate(std::string &exp,
 		return Global::_fault;
 	else
 	{
-		// Else this is neither an array expression nor an comma expressions
+		// 若直接是表达式则可以放入下一层计算
 		return numeric(exp, variables, rets, output);
 	}
 }
+
+/* 
+ * numeric函数
+ * 输入表达式，变量值，返回位置及输出
+ * 先处理表达式中的函数成分和()成分
+ * 将成分算出后修改表达式
+ * 将修改后的表达式放入RPNCalc中计算 
+ */
 
 int Calculator::numeric(std::string &exp,
 	std::map<std::string, Element> &variables,
@@ -255,10 +272,10 @@ int Calculator::numeric(std::string &exp,
 
 	Util::trim(exp);
 
-	// Handle numerical, logical and string expression computation
+	// 处理逻辑，字符串和算数运算
 	while ((start = exp.find_first_of("(")) != std::string::npos)
 	{
-		// First find the deepest parentheses in the expressions
+		// 优先处理最深的括号
 		int flag;
 		size_t end;
 		std::string component;
@@ -283,14 +300,15 @@ int Calculator::numeric(std::string &exp,
 		if (end >= exp.length())
 			return Global::_fault;
 
-		// Handle the deepest parenthesess
+		// 计算括号中内容
 		component = exp.substr(start + 1, end - start - 1);
 		flag = numeric(component, variables, tempRets, output);
 
 		if (flag == Global::_fault)
 			return Global::_fault;
 
-		// Handle returns from the deepest ()
+		// 处理括号返回值
+		// 将字符串修改
 		for (int i = 0; i < tempRets.size(); i++)
 		{
 			switch(tempRets[i].type)
@@ -309,7 +327,7 @@ int Calculator::numeric(std::string &exp,
 				os << ",";
 		}
 
-		// Function call is handled here
+		// 处理函数调用
 		if (start != 0 && isalnum(exp.at(start - 1)))
 		{
 			int j;
@@ -327,7 +345,6 @@ int Calculator::numeric(std::string &exp,
 				if (exp.at(j) == ' ')
 					break;
 			}
-
 
 			funcName = exp.substr(j + 1, start - j - 1);
 			flag = isFunction(funcName, variables);
@@ -363,9 +380,8 @@ int Calculator::numeric(std::string &exp,
 		}
 	}
 
-	// Now every expressions in parentheses and functions have been computed
-	// and replaced by their actual value in the string expressions
-	// And this code snippet is responsible for the final evaluation of the string
+	// 现在所有的括号和函数都被修改为真实值
+	// 剩下的部分处理具体计算
 	std::vector<std::string> commaSeps;
 	std::vector<std::string> tempSeps;
 
@@ -405,6 +421,7 @@ int Calculator::numeric(std::string &exp,
 		}
 	}
 
+	// 计算每个成分
 	for (int i = 0; i < commaSeps.size(); i++)
 	{
 		if (isArrayVar(commaSeps[i], variables))
@@ -421,6 +438,12 @@ int Calculator::numeric(std::string &exp,
 	return Global::_ok;
 }
 
+/*
+ * isOperator函数
+ * 输入字符串
+ * 判断是否是运算符
+ */
+
 int Calculator::isOperator(std::string input)
 {
 	if (input == "**" || input == "*" || input == "/" || input == "+" || input == "-" || input == "mod" || 
@@ -430,6 +453,12 @@ int Calculator::isOperator(std::string input)
 	else 
 		return 0;
 }
+
+/*
+ * priority函数
+ * 输入字符串
+ * 定义运算优先级
+ */
 
 int Calculator::priority(std::string opt)
 {
@@ -450,6 +479,12 @@ int Calculator::priority(std::string opt)
 	return 0;
 }
 
+/*
+ * isFunction函数
+ * 输入字符串及变量映射
+ * 判断给定的函数名是否已经有函数定义
+ */
+
 int Calculator::isFunction(std::string input, std::map<std::string, Element> &variables)
 {
 	std::map<std::string, Element>::iterator it;
@@ -465,6 +500,12 @@ int Calculator::isFunction(std::string input, std::map<std::string, Element> &va
 	else
 		return 0;
 }
+
+/*
+ * isNumVar函数
+ * 输入字符串及变量映射
+ * 判断变量或常量是否是一个number
+ */
 
 int Calculator::isNumVar(std::string input, std::map<std::string, Element> &variables)
 {
@@ -482,6 +523,12 @@ int Calculator::isNumVar(std::string input, std::map<std::string, Element> &vari
 	return (iss.rdbuf()->in_avail() == 0);
 		
 }
+
+/* 
+ * isStringVar函数
+ * 输入字符串及变量映射
+ * 判断一个变量或常量是否是一个string
+ */
 
 int Calculator::isStringVar(std::string input, std::map<std::string, Element> &variables)
 {
@@ -503,6 +550,12 @@ int Calculator::isStringVar(std::string input, std::map<std::string, Element> &v
 	return 0;
 }
 
+/*
+ * isArrayVar函数
+ * 输入字符串及变量映射
+ * 判断一个变量或常量是否是一个数组
+ */
+
 int Calculator::isArrayVar(std::string input, std::map<std::string, Element> &variables)
 {
 	std::map<std::string, Element>::iterator it;
@@ -514,6 +567,12 @@ int Calculator::isArrayVar(std::string input, std::map<std::string, Element> &va
 	}
 	return 0;
 }
+
+/*
+ * isLogic函数
+ * 输入字符串向量及变量映射
+ * 判断一个输入是否是逻辑表达
+ */
 
 int Calculator::isLogic(std::vector<std::string> inputs, std::map<std::string, Element> vars)
 {
@@ -534,6 +593,12 @@ int Calculator::isLogic(std::vector<std::string> inputs, std::map<std::string, E
 	}
 	return 0;
 }
+
+/*
+ * isComma函数
+ * 输入字符串
+ * 判断一个输入是否是逗号表达式
+ */
 
 int Calculator::isComma(std::string input)
 {
@@ -558,6 +623,12 @@ int Calculator::isComma(std::string input)
 	return 0;
 }
 
+/*
+ * isLogicOperator函数
+ * 输入字符串
+ * 判断一个输入是否是逻辑运算符
+ */
+
 int Calculator::isLogicOperator(std::string input)
 {
 	if (input == "==" || input == "!=" || input == ">=" || input == "<=" || input == ">" ||
@@ -566,6 +637,12 @@ int Calculator::isLogicOperator(std::string input)
 	else
 		return 0;
 }
+
+/*
+ * RPNCalc函数
+ * 输入字符串，变零映射及返回地址
+ * 通过逆波兰表达式计算表达式的值
+ */
 
 int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &variables, Element &ret)
 {
@@ -599,6 +676,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 
 	int indicator;
 
+	// 分为字符串与数值计算两类
 	for (int i = 0; i < ops.size(); i++)
 	{
 		if (i % 2 == 0)
@@ -733,6 +811,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 		reverse.push(temp);
 	}
 
+	// 根据运算符确定运算类型
 	if (mode == numericMode)
 	{
 		double op1, op2;
@@ -794,6 +873,7 @@ int Calculator::RPNCalc(std::string input, std::map<std::string, Element> &varia
 		}
 		if (numericStack.size() != 1 || reverse.size() != 0)
 			return Global::_fault;
+		// 根据是否是逻辑表达式判断说是否返回布尔类型
 		else
 		{
 			if (!log)

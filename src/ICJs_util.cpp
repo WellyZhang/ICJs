@@ -4,6 +4,13 @@
 #include <vector>
 #include <sstream>
 
+/*
+ * split函数
+ * 输入字符串，分隔符，返回向量地址及一个布尔类型参数
+ * 根据分隔符将字符分分割并放入向量中
+ * 布尔确定是否需要保存字符串中的空格
+ */
+
 void Util::split(std::string& s, std::string delim, std::vector<std::string> *ret, bool preserveBlank)
 {
 	size_t last = 0;
@@ -98,6 +105,13 @@ void Util::split(std::string& s, std::string delim, std::vector<std::string> *re
 
 }
 
+/*
+ * trim函数
+ * 输入一个字符串
+ * 修正字符串
+ * 将头尾的空格去掉
+ */
+
 std::string &Util::trim(std::string &s)
 {
 	if (s.empty())
@@ -108,6 +122,12 @@ std::string &Util::trim(std::string &s)
 	s.erase(s.find_last_not_of(" ") + 1);
 	return s;
 }
+
+/*
+ * numOfChar函数
+ * 输入字符串和一个字符
+ * 统计字符串中字符出现的个数
+ */
 
 int Util::numOfChar(std::string &s, char c)
 {
@@ -122,6 +142,12 @@ int Util::numOfChar(std::string &s, char c)
 	return counter;
 }
 
+/*
+ * arrayToString函数
+ * 输入一个元素向量
+ * 将这个元素向量转化为字符串输出
+ */
+ 
 std::string Util::arrayToString(std::vector<Element> ary)
 {
 	std::ostringstream os;

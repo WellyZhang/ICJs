@@ -5,6 +5,12 @@
 #include <string>
 #include <vector>
 
+/* 
+ * 工具类
+ * 主要用于支持计算类的工具函数
+ * 同时兼顾字符串处理
+ */
+
 class Util
 {	
 public:
