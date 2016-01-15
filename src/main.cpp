@@ -111,7 +111,7 @@ void printHeader(void)
 	asctime_s(stTmp, &tmTmp);
 	cout << "Interpretive C++ for JavaScript Console 1.0" << endl;
 	cout << "ICJs 1.0 | " << stTmp;
-	cout << "Type \"credits\" for mor information" << endl << endl;
+	cout << "Type \"credits\" for more information" << endl << endl;
 	cout << "ICJs -- A lightweight interpreter for JavaScript powered by C++" << endl;
 	cout << "ICJs is brought to you by Welly Zhang, Tianji Zheng, Qinbin Tan and Qiankun Zhang." << endl << endl;
 	return;
