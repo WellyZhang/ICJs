@@ -7,6 +7,17 @@
 
 typedef void * any_t;
 
+/*
+ * 全局变量类
+ * type == 0 / 1 时 data指向空指针
+ * type == 2 时 data指向string
+ * type == 3 时 data指向double
+ * type == 4 时 data指向boolean
+ * type == 5 时 data指向一个vector<Element>
+ * type == 6 时 data指向...
+ * type == 7 时 data指向一个Function实例
+ */
+
 class Global
 {
 	public:
@@ -23,21 +34,22 @@ class Global
 };
 
 /*
- * type == 0 / 1 时 data指向空指针
- * type == 2 时 data指向string
- * type == 3 时 data指向double
- * type == 4 时 data指向boolean
- * type == 5 时 data指向一个vector<Element>
- * type == 6 时 data指向...
- * type == 7 时 data指向一个Function实例
+ * 函数类
+ * 记录函数名，函数参数与函数体
  */
- class Function
+
+class Function
 {
 	public:
 		std::string key;
 		std::vector<std::string> param_names;
 		std::vector<std::string> body;
 };
+
+/* 
+ * 元素类
+ * 记录元素名，类型与具体数据
+ */
 
 class Element
 {

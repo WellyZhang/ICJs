@@ -7,6 +7,12 @@
 #include <vector>
 #include <map>
 
+/*
+ * Calculator类
+ * 用于表达式计算
+ * 支持数组，字符串，布尔，数字，函数与递归
+ */
+
 class Calculator
 {
 	public:
