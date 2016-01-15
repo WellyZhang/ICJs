@@ -105,10 +105,10 @@ void printHeader(void)
 	localtime_s(&tmTmp, &now);
 	asctime_s(stTmp, &tmTmp);
 	cout << "Interpretive C++ for JavaScript Console 1.0" << endl;
-	cout << "ICJ 1.0 | " << stTmp;
+	cout << "ICJs 1.0 | " << stTmp;
 	cout << "Type \"credits\" for mor information" << endl << endl;
-	cout << "ICJ -- A lightweight tnterpreter for JavaScript powered by C++" << endl;
-	cout << "ICJ is brought to you by Welly Zhang, Tianji Zheng, Qinbin Tan and Qiankun Zhang." << endl << endl;
+	cout << "ICJs -- A lightweight interpreter for JavaScript powered by C++" << endl;
+	cout << "ICJs is brought to you by Welly Zhang, Tianji Zheng, Qinbin Tan and Qiankun Zhang." << endl << endl;
 	return;
 }
 
