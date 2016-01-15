@@ -16,7 +16,7 @@ Parser::Parser()
 Parser::~Parser()
 {
 }
-
+//去除多余符号，保留操作符
 void clear_string(string& str)
 {
 	sit it = str.begin();
@@ -28,7 +28,7 @@ void clear_string(string& str)
 		it++;
 	}
 }
-
+//去除空格和制表符
 void string_dblank(string& str)
 {
 	sit it = str.begin();
@@ -37,7 +37,7 @@ void string_dblank(string& str)
 		else it++;
 	}
 }
-
+//找到对应的反大括号
 vsit vector_find_bracket(vector<string> &lines, vsit line)
 {
 	vsit it = line + 1;
@@ -55,7 +55,7 @@ vsit vector_find_bracket(vector<string> &lines, vsit line)
 	}
 	return it;
 }
-
+//找到对应的else句段
 vsit vector_find_else(vector<string> &lines, vsit line)
 {
 	vsit it = line + 1;
@@ -82,7 +82,7 @@ vsit vector_find_else(vector<string> &lines, vsit line)
 		return it + 1;
 	}
 }
-
+//找到下一个case句段
 vsit vector_find_next_case(vector<string> &lines, vsit line)
 {
 	vsit it = line + 1;
@@ -98,7 +98,7 @@ vsit vector_find_next_case(vector<string> &lines, vsit line)
 	}
 	return it;
 }
-
+//foreach语句循环
 int forloop(vsit &bg, vsit&ed,
 	map<std::string, Element> &variables,
 	vector<Element> &output,
@@ -133,7 +133,7 @@ int Parser::parse(vector<string> &input,
 	vector<Element> fun_ret;
 	return _parse(input, variables, output, false, fun_ret);
 }
-
+//字符串分词
 void split(string& s, string delim, vector<string> &ret)
 {
 	size_t last = 0;
@@ -149,7 +149,11 @@ void split(string& s, string delim, vector<string> &ret)
 		ret.push_back(s.substr(last, index - last));
 	}
 }
-
+/*
+	语句段内部函数
+	islocal检测是否需要本地变量
+	fun_ret返回可能的函数返回值
+*/
 int _parse(vector<string> &input,
 	map<std::string, Element> &variables,
 	vector<Element> &output,
@@ -180,6 +184,7 @@ int _parse(vector<string> &input,
 		is >> oper;
 		clear_string(oper);
 		/*
+			赋值语句
 			var a=1+2;
 			var a;
 		*/
@@ -233,6 +238,7 @@ int _parse(vector<string> &input,
 			}
 		}
 		/*
+			条件选择语句
 			if (cond)
 				....
 			else
@@ -276,6 +282,7 @@ int _parse(vector<string> &input,
 			}
 		}
 		/*
+			foreach循环
 			for (var a : list)
 				{
 
@@ -322,6 +329,7 @@ int _parse(vector<string> &input,
 			}
 		}
 		/*
+			switch-case选择
 			switch (exp)
 			{
 				case n:
@@ -363,6 +371,9 @@ int _parse(vector<string> &input,
 		else if (oper == "default"){
 			it++;
 		}
+		/*
+			break,continue跳转
+		*/
 		else if (oper == "break"){
 			it = ed;
 			ed = input.end();
@@ -371,6 +382,7 @@ int _parse(vector<string> &input,
 			it = ed;
 		}
 		/*
+			while循环
 			while ()
 			{
 				..
@@ -422,6 +434,9 @@ int _parse(vector<string> &input,
 					it = it + 2;
 			}
 		}
+		/*
+			return语句
+		*/
 		else if (oper == "return"){
 			int first = it->find('n');
 			int last = end;
@@ -438,6 +453,13 @@ int _parse(vector<string> &input,
 			}
 			break;
 		}
+		/*
+			函数定义
+			function exp(a, b, c...)
+			{
+				...
+			}
+		*/
 		else if (oper == "function"){
 			int first = it->find('o');
 			int last = it->find('(');
@@ -467,6 +489,11 @@ int _parse(vector<string> &input,
 		else if (oper == "{"||oper=="}")
 			it++;
 		else {
+			/*
+				赋值语句
+				a=exp
+				a,b=exp1, exp2
+			*/
 			if (it->find("=") != string::npos && it->find("==") != it->find("="))
 			{
 				int first = it->find("=");
@@ -520,6 +547,10 @@ int _parse(vector<string> &input,
 				}
 				it++;
 			}
+			/*
+				表达式求值
+				exp
+			*/
 			else{
 				exp = it->substr(0, end);
 				string::iterator itt = exp.begin();
@@ -546,7 +577,7 @@ int _parse(vector<string> &input,
 	}
 	return Global::_ok;
 }
-
+//函数运行
 int Parser::run_func(Function &func,
 	std::map<std::string, Element> &variables,
 	std::vector<Element> parameters,
@@ -555,10 +586,10 @@ int Parser::run_func(Function &func,
 {
 	vector<Element> localVar;
 	vector<Element> coflictVar;
-
+	
 	if (func.param_names.size() != parameters.size())
 		return Global::_fault;
-
+	//将参数加入变量表
 	for (int i = 0; i < parameters.size(); i++){
 		parameters[i].key = func.param_names[i];
 		localVar.push_back(parameters[i]);
@@ -569,7 +600,7 @@ int Parser::run_func(Function &func,
 	}
 	
 	_parse(func.body, variables, output, true, ret);
-	
+	//将参数移出变量表
 	for (int i = 0; i < localVar.size(); i++){
 		variables.erase(localVar[i].key);
 	}
@@ -578,23 +609,3 @@ int Parser::run_func(Function &func,
 	}
 	return Global::_ok;
 }
-
-/*statements.push_back("var a,b,c=1, 2, 3;");
-statements.push_back("switch (b)");
-statements.push_back("{");
-statements.push_back("case 1:");
-statements.push_back("a;");
-statements.push_back("break;");
-statements.push_back("case 2:");
-statements.push_back("b;");
-statements.push_back("break;");
-statements.push_back("}");
-
-Parser::parse(statements, variables, output_);
-for (int i = 0; i < output_.size(); i++){
-switch (output_[i].type){
-case Global::_number:
-cout << *(double*)output_[i].data << endl;
-break;
-}
-}*/

@@ -15,9 +15,21 @@ class Parser
 {
 	public:
 		Parser();
+		/*
+			执行input语句段
+			外部变量为variables
+			I/O输出为output
+		*/
 		static int parse(std::vector<std::string> &input, 
 			std::map<std::string, Element> &variables, 
 			std::vector<Element> &output);
+		/*
+			运行函数func
+			外部变量为variables
+			参数表为parameters
+			函数返回值为ret
+			I/O输出为output
+		*/
 		static int run_func(Function &func,
 			std::map<std::string, Element> &variables,
 			std::vector<Element> parameters,

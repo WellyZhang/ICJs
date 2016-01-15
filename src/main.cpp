@@ -52,12 +52,14 @@ int main(int argc, char **argv)
 		cout << input << "[" << i << "]: ";
 		SetConsoleTextAttribute(outputHandler, FORBLACK);
 		rawInput = readIn(int(log10(i)));
-
+		
+		//退出语句
 		if (rawInput.find("exit") != string::npos)
 		{
 			break;
 		}
 		Util::split(rawInput, "\n", &statements, false);
+		//加载文件
 		if (rawInput.find("%load") != string::npos){
 			statements.clear();
 			string oper, filename;
@@ -74,11 +76,14 @@ int main(int argc, char **argv)
 		int error = Parser::parse(statements, variables, output_);
 
 		//result = writeOut(Util::trim(output_));
+		
 		if (rawInput == "credits" || !output_.empty() || error != Global::_ok){
 			SetConsoleTextAttribute(outputHandler, FORRED);
 			cout << output << "[" << i << "]: ";
 			SetConsoleTextAttribute(outputHandler, FORBLACK);
+			//I/O输出
 			print(output_, false);
+			//输出credits
 			if (rawInput == "credits")
 			{
 				printCredits();
