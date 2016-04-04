@@ -1,4 +1,5 @@
-# Introduction
+# ICJs
+## Introduction
 
 ICJs, or _Interpretive Cpp for JavaScript_, is a course project submitted to _Principles of Programming Methodology_, _Zhejiang University_.
 
